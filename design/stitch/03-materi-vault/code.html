@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html lang="id"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><title>Studika</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;margin:0;padding:0;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "secondary-fixed": "#eaddff", "primary": "#9e4229", "surface-container-lowest": "#ffffff", "on-tertiary-fixed": "#390c00", "error": "#ba1a1a", "on-secondary-fixed-variant": "#533294", "on-secondary-container": "#49278a", "primary-container": "#e87a5d", "surface": "#fff8f6", "inverse-primary": "#ffb4a1", "on-primary": "#ffffff", "surface-dim": "#e4d7d4", "surface-tint": "#9e4229", "secondary-fixed-dim": "#d2bcff", "inverse-on-surface": "#fbeeea", "surface-bright": "#fff8f6", "on-primary-fixed": "#3c0800", "outline-variant": "#dcc0ba", "tertiary-fixed": "#ffdbcf", "on-tertiary": "#ffffff", "surface-container-low": "#fef1ed", "surface-container": "#f8ebe8", "on-background": "#201a18", "inverse-surface": "#362f2d", "secondary-container": "#b897ff", "surface-container-high": "#f2e6e2", "on-error-container": "#93000a", "on-secondary": "#ffffff", "tertiary": "#994527", "on-error": "#ffffff", "on-surface": "#201a18", "primary-fixed-dim": "#ffb4a1", "surface-container-highest": "#ece0dc", "on-tertiary-fixed-variant": "#7b2f12", "on-tertiary-container": "#5d1a00", "on-secondary-fixed": "#25005a", "outline": "#89726c", "on-primary-container": "#611602", "surface-variant": "#ece0dc", "tertiary-container": "#e27e5b", "tertiary-fixed-dim": "#ffb59c", "on-surface-variant": "#56423d", "background": "#fff8f6", "on-primary-fixed-variant": "#7e2b14", "primary-fixed": "#ffdbd2", "error-container": "#ffdad6", "secondary": "#6b4bad" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "0.875rem", "margin": "1.25rem", "space-lg": "1.25rem", "space-xl": "1.75rem", "space-2xl": "2.5rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter": "1rem" }, fontFamily: { "code-sm": ["JetBrains Mono"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"] }, fontSize: { "code-sm": ["12px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-sm": ["17px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-lg": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "display": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "21px", "letterSpacing": "0em", "fontWeight": "400" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><img alt="Studika Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1Wu2Ehu1yczbpG4wqZuw18XPsVNgC9c1dRQtM-vXg3x1o6ALm2JFXBV4R3ue2-d-ZG-eZk1AamL_E1FJQGZlsHBMI4GaXt-o8e_FRmRTdJlJuQp2PFdZuc04AHui6WODHkTNTyl7qZCVxVhlp1Ly4imfjwcMTIY1lduBvrxmmTKYcq1OD2y78zIc7jiWj2oKQDKLFhkGbsCHVJ29k5G36jbuI7io5moy0378QlH2Yii-g"/><div class="flex flex-col min-w-0"><span class="text-primary font-headline-sm text-headline-sm truncate">Studika</span><span class="text-on-surface-variant font-label-sm text-label-sm truncate">Materi Dan Vault</span></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><button aria-label="Notifikasi" class="relative w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary ring-2 ring-surface"></span></button><a class="flex items-center justify-center p-0.5 rounded-full hover:ring-2 hover:ring-primary/20 transition-all" data-path="akun" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFmfrqNDI1DOmXj3RD7Wu5qoP6oSC6cpjtbS3bOatUagc_WjFL7pYpV3LnG8KjuKzCjkw9PVqPoxlY1PfNhInLW3yjh-iG6cdluD_TwKK6vsCAKkKtfxL-pBmN_ZiUOyu-jCKYSXBdi6gDEdtHaergCKP6A5uZJtk43dC4uolCU2M65C6v0VxfsEAgt6rrZnTvCtV8qCTCNkJhtn0Lmgmu48XisCFTwW1TftTycyOF"/></a></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface"><div class="flex flex-col w-full pb-10">
+<div class="px-margin pt-4 pb-2">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-primary tracking-wider uppercase">Vault Pengetahuan</p>
+<h1 class="font-headline-md text-headline-md text-on-surface">Pusat Materi &amp; Catatan</h1>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container-high px-3 py-1.5 rounded-full">
+<span class="material-symbols-outlined text-secondary text-[16px]">cloud_done</span>
+<span class="font-code-sm text-code-sm text-on-surface font-medium">18 Berkas</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Unggah modul atau jepret catatan papan tulis untuk diekstrak AI otomatis.</p>
+</div>
+<section class="px-margin mt-3">
+<div class="bg-surface-container-low rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center gap-space-sm mb-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">upload_file</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface leading-tight">Unggah Berkas Baru</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Dokumen PDF, foto catatan, atau tangkapan modul</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm mb-4">
+<div class="flex flex-col items-center text-center py-2">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed/50 flex items-center justify-center text-secondary mb-2">
+<span class="material-symbols-outlined text-[26px]">drive_folder_upload</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Tarik dokumen ke sini</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Maksimal ukuran file 25 MB per dokumen</span>
+<div class="grid grid-cols-2 gap-space-sm w-full mt-4">
+<button class="flex items-center justify-center gap-space-xs bg-primary text-on-primary py-2.5 px-3 rounded-lg shadow-sm hover:opacity-95 active:scale-[0.98] transition-transform" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+<span class="font-label-md text-label-md truncate">Pilih PDF Modul</span>
+</button>
+<button class="flex items-center justify-center gap-space-xs bg-surface-container-highest text-on-surface py-2.5 px-3 rounded-lg hover:bg-surface-dim active:scale-[0.98] transition-transform" type="button">
+<span class="material-symbols-outlined text-secondary text-[18px]">add_a_photo</span>
+<span class="font-label-md text-label-md truncate">Foto Catatan</span>
+</button>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-space-md shadow-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-md text-label-md text-on-surface truncate">Slide_Fisika_Bab4.pdf</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant flex-shrink-0">(4.2 MB)</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Selesai diunggah • 100% Selesai</p>
+</div>
+</div>
+<span class="font-code-sm text-code-sm text-secondary font-medium bg-secondary-fixed/40 px-2 py-0.5 rounded-full flex-shrink-0">100%</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden mt-3 mb-2.5">
+<div class="bg-primary-container h-full rounded-full w-full"></div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center gap-1.5 bg-secondary-fixed/50 px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-secondary text-[14px]">auto_awesome</span>
+<span class="font-label-sm text-label-sm text-on-secondary-fixed-variant">Siap Diracik Jadi Rangkuman &amp; Flashcard</span>
+</div>
+<button class="font-label-sm text-label-sm text-primary flex items-center gap-0.5 hover:underline" type="button">
+<span>Racik</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<section class="mt-5">
+<div class="px-margin flex items-center justify-between mb-2.5">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Koleksi Berkas</h2>
+<button class="font-label-md text-label-md text-primary flex items-center gap-0.5" type="button">
+<span>Urutkan</span>
+<span class="material-symbols-outlined text-[16px]">tune</span>
+</button>
+</div>
+<div class="flex items-center gap-space-sm overflow-x-auto px-margin pb-1 no-scrollbar">
+<button class="vault-filter-pill active px-3.5 py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md whitespace-nowrap shadow-sm" type="button">
+        Semua
+      </button>
+<button class="vault-filter-pill px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md whitespace-nowrap hover:bg-surface-dim transition-colors" type="button">
+        PDF Modul
+      </button>
+<button class="vault-filter-pill px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md whitespace-nowrap hover:bg-surface-dim transition-colors" type="button">
+        Foto Catatan
+      </button>
+<button class="vault-filter-pill px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md whitespace-nowrap hover:bg-surface-dim transition-colors" type="button">
+        Rangkuman AI
+      </button>
+<button class="vault-filter-pill px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md whitespace-nowrap hover:bg-surface-dim transition-colors" type="button">
+        Rumus Praktis
+      </button>
+</div>
+</section>
+<section class="px-margin mt-4 flex flex-col gap-space-md">
+<article class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-14 rounded-lg bg-error-container/40 flex flex-col items-center justify-center flex-shrink-0 text-error">
+<span class="material-symbols-outlined text-[24px]">description</span>
+<span class="font-code-sm text-[10px] uppercase font-bold tracking-tight">PDF</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap mb-1">
+<span class="bg-primary-fixed/60 text-on-primary-fixed font-label-sm text-label-sm uppercase px-2 py-0.5 rounded-full">Matematika</span>
+<span class="bg-surface-container-high text-on-surface-variant font-code-sm text-code-sm px-2 py-0.5 rounded-full">24 Halaman</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Kalkulus Lanjut - Bab 3 Integral.pdf</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Diunggah 2 jam lalu • 6.8 MB</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-sm mt-3 pt-3 bg-surface-container-low/50 rounded-lg p-2">
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-primary text-[18px]">menu_book</span>
+<span>Baca PDF</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md shadow-sm hover:opacity-95 transition-opacity" type="button">
+<span class="material-symbols-outlined text-[18px]">neurology</span>
+<span class="truncate">Tanya AI Dokumen</span>
+</button>
+</div>
+</article>
+<article class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container-high relative">
+<img class="w-full h-full object-cover" data-alt="Close up photograph of a student study desk with handwritten chemistry reaction notes, benzene rings drawn in dark ink on off-white textured paper with warm desk lamp lighting and pastel highlighter marks." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCfvfKHr9rsijThBasZ0EoN8NYhld51evUSGzv4wbShsSx2VWwLP443vBat-y7dU8j6VYBFRO5_yTCA4mRTFpZkbo3ETCChjFV_EqusXQ9S2-a73edwkEh_6vQ-FOv13QmGbepgaS_-XSUGMyaTedU1_2eN89IzrujZiY47D6tCHVcGnF7IRCP-CtRE-c5QxNNypAyVeyvUGVkNvx9gL59gSKEWoOr4su1lSK17hEm"/>
+<div class="absolute bottom-0 inset-x-0 bg-on-background/70 text-surface-container-lowest py-0.5 text-center font-code-sm text-[9px]">
+            PNG
+          </div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap mb-1">
+<span class="bg-secondary-fixed/70 text-on-secondary-fixed-variant font-label-sm text-label-sm uppercase px-2 py-0.5 rounded-full">Kimia</span>
+<div class="flex items-center gap-1 bg-surface-container-high text-secondary font-label-sm text-label-sm px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[12px]">document_scanner</span>
+<span>Teks Berhasil Dikenali</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Foto Catatan Reaksi Kimia Organik.png</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Papan Tulis Lab • Dikonversi ke Markdown</p>
+</div>
+</div>
+<div class="mt-3 pt-2 flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">visibility</span>
+<span>14 Formula Teridentifikasi</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button aria-label="Lihat Gambar" class="p-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-dim transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+<button class="flex items-center gap-1 py-1.5 px-3 rounded-lg bg-primary-fixed text-on-primary-fixed font-label-md text-label-md hover:bg-primary-fixed-dim transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">psychology</span>
+<span>Uji Flashcard</span>
+</button>
+</div>
+</div>
+</article>
+<article class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-14 rounded-lg bg-surface-container-high flex flex-col items-center justify-center flex-shrink-0 text-on-surface-variant">
+<span class="material-symbols-outlined text-[24px]">article</span>
+<span class="font-code-sm text-[10px] uppercase font-bold tracking-tight">PDF</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap mb-1">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm uppercase px-2 py-0.5 rounded-full">Biologi</span>
+<span class="bg-surface-container-high text-on-surface-variant font-code-sm text-code-sm px-2 py-0.5 rounded-full">Kemarin</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Ringkasan Biologi Sel Molekuler.pdf</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">12 Halaman • 3.1 MB • Anotasi Lengkap</p>
+</div>
+<button aria-label="Pilihan Berkas" class="text-on-surface-variant hover:text-on-surface p-1" type="button">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<div class="mt-3 flex items-center justify-between pt-2">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-code-sm text-code-sm">
+<span class="material-symbols-outlined text-[14px]">auto_stories</span>
+<span>Terakhir dibaca: Bab 2 (Halaman 5)</span>
+</div>
+<button class="text-primary font-label-md text-label-md flex items-center gap-0.5 hover:underline" type="button">
+<span>Lanjutkan</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</article>
+</section>
+<div class="px-margin mt-5 mb-2">
+<div class="bg-surface-container-low rounded-xl p-space-md flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed/50 flex items-center justify-center text-secondary flex-shrink-0">
+<span class="material-symbols-outlined text-[22px]">lightbulb</span>
+</div>
+<div class="min-w-0 flex-1">
+<h4 class="font-label-lg text-label-lg text-on-surface">Tips Belajar Studika</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Foto papan tulis dengan pencahayaan terang agar teks rumus dapat diekstrak 100% akurat oleh OCR AI.</p>
+</div>
+</div>
+</div>
+<div class="sticky bottom-4 z-40 px-margin mt-3 pointer-events-none">
+<div class="flex justify-end">
+<button class="pointer-events-auto flex items-center gap-2 bg-secondary text-on-secondary px-4 py-3 rounded-full shadow-lg hover:bg-secondary/95 active:scale-95 transition-all" id="btn-quick-scan" type="button">
+<span class="material-symbols-outlined text-[22px]">photo_camera</span>
+<span class="font-label-lg text-label-lg whitespace-nowrap">Scan Catatan Cepat (Kamera)</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  document.querySelectorAll('.vault-filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.vault-filter-pill').forEach(btn => {
+        btn.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+        btn.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+      });
+      pill.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+      pill.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+    });
+  });
+
+  const scanBtn = document.getElementById('btn-quick-scan');
+  if (scanBtn) {
+    scanBtn.addEventListener('click', () => {
+      scanBtn.classList.add('ring-4', 'ring-secondary-fixed');
+      setTimeout(() => scanBtn.classList.remove('ring-4', 'ring-secondary-fixed'), 400);
+    });
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-2px_12px_rgba(184,110,89,0.06)]" data-active-classes="text-primary font-bold"><div class="flex items-center justify-around h-16 px-space-xs"><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-primary transition-colors gap-0.5" data-path="beranda" href="#"><span class="material-symbols-outlined text-[22px]">home</span><span class="font-label-sm text-label-sm tracking-tight">Beranda</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-primary transition-colors gap-0.5" data-path="jadwal-dan-tugas" href="#"><span class="material-symbols-outlined text-[22px]">event_note</span><span class="font-label-sm text-label-sm tracking-tight">Jadwal</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] h-12 transition-colors gap-0.5 text-primary font-bold" data-path="materi-dan-vault" href="#"><span class="material-symbols-outlined text-[22px]">folder_open</span><span class="font-label-sm text-label-sm tracking-tight">Vault</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-secondary transition-colors gap-0.5" data-path="tutor-ai" href="#"><span class="material-symbols-outlined text-[22px]">neurology</span><span class="font-label-sm text-label-sm tracking-tight">Tutor AI</span></a><a class="flex flex-col items-center justify-center min-w-[56px] h-12 text-on-surface-variant hover:text-primary transition-colors gap-0.5" data-path="akun" href="#"><span class="material-symbols-outlined text-[22px]">person</span><span class="font-label-sm text-label-sm tracking-tight">Akun</span></a></div></nav></body></html>
