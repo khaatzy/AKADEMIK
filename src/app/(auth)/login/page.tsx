@@ -7,7 +7,10 @@ import {
   registerAction,
   verifyEmailOtpAction,
   resendVerificationOtpAction,
+  checkEmailVerifiedAction,
+  instantVerifyEmailAction,
   signInWithGoogleAction,
+  signInWithDemoStudentAction,
 } from '@/lib/actions/auth';
 
 function LoginForm() {
@@ -23,9 +26,21 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingLink, setIsCheckingLink] = useState(false);
+  const [isInstantVerifying, setIsInstantVerifying] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  // Google OAuth Configuration Notice Modal
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [googleCallbackUrl, setGoogleCallbackUrl] = useState(
+    'https://hklmxhsryozykwailkei.supabase.co/auth/v1/callback'
+  );
+
   const [errorMessage, setErrorMessage] = useState<string | null>(
-    oauthError === 'oauth_failed'
+    oauthError === 'verification_failed'
+      ? 'Verifikasi email tidak berhasil atau tautan sudah kedaluwarsa. Silakan coba kembali.'
+      : oauthError === 'oauth_failed'
       ? 'Autentikasi Google gagal atau dibatalkan. Silakan coba kembali.'
       : null
   );
@@ -107,7 +122,9 @@ function LoginForm() {
         setErrorMessage(res.error);
       } else if (res?.needsVerification) {
         setAuthMode('verify_email');
-        setSuccessMessage(`Kode verifikasi telah dikirim ke ${email}. Silakan cek kotak masuk atau folder spam Anda.`);
+        setSuccessMessage(
+          `Tautan konfirmasi telah dikirim ke ${email}. Silakan cek kotak masuk email Anda.`
+        );
       } else {
         router.push('/beranda');
       }
@@ -126,6 +143,7 @@ function LoginForm() {
     }
   };
 
+  // 1. Verifikasi dengan kode OTP 6 digit
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otpCode.trim()) {
@@ -145,10 +163,53 @@ function LoginForm() {
       setSuccessMessage('Email berhasil diverifikasi! Mengalihkan ke Beranda...');
       setTimeout(() => {
         router.push('/beranda');
-      }, 900);
+      }, 700);
     }
   };
 
+  // 2. Verifikasi status link email
+  const handleCheckEmailLink = async () => {
+    setIsCheckingLink(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const res = await checkEmailVerifiedAction(email);
+    setIsCheckingLink(false);
+
+    if (res?.error) {
+      setErrorMessage(res.error);
+    } else if (res?.url) {
+      window.location.href = res.url;
+    } else {
+      setSuccessMessage('Email Anda sudah terverifikasi! Masuk ke Beranda...');
+      setTimeout(() => {
+        router.push('/beranda');
+      }, 700);
+    }
+  };
+
+  // 3. Verifikasi instan (Langsung aktifkan akun di Supabase)
+  const handleInstantVerify = async () => {
+    setIsInstantVerifying(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const res = await instantVerifyEmailAction(email);
+    setIsInstantVerifying(false);
+
+    if (res?.error) {
+      setErrorMessage(res.error);
+    } else if (res?.url) {
+      window.location.href = res.url;
+    } else {
+      setSuccessMessage('Akun berhasil diaktifkan secara instan! Mengalihkan ke Beranda...');
+      setTimeout(() => {
+        router.push('/beranda');
+      }, 700);
+    }
+  };
+
+  // 4. Kirim ulang email konfirmasi
   const handleResendOtp = async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -158,10 +219,11 @@ function LoginForm() {
     if (res?.error) {
       setErrorMessage(res.error);
     } else {
-      setSuccessMessage(`Kode verifikasi baru berhasil dikirim ke ${email}.`);
+      setSuccessMessage(`Tautan konfirmasi baru berhasil dikirim ke ${email}. Periksa inbox atau folder spam.`);
     }
   };
 
+  // 5. Autentikasi Google
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     setErrorMessage(null);
@@ -169,17 +231,38 @@ function LoginForm() {
       const res = await signInWithGoogleAction();
       setIsGoogleLoading(false);
 
-      if (res?.error) {
-        setErrorMessage(res.error);
-      } else if (res?.url) {
+      if (res?.url) {
+        // Provider aktif! Redirect ke accounts.google.com
         window.location.href = res.url;
+      } else if (res?.googleNotConfigured) {
+        // Provider belum diaktifkan di Supabase Dashboard
+        if (res.callbackUrl) setGoogleCallbackUrl(res.callbackUrl);
+        setShowGoogleModal(true);
+      } else if (res?.error) {
+        setErrorMessage(res.error);
       } else if (res?.success) {
         router.push('/beranda');
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Terjadi kesalahan saat memulai autentikasi Google.';
+      const message =
+        err instanceof Error ? err.message : 'Terjadi kesalahan saat memulai autentikasi Google.';
       setErrorMessage(message);
       setIsGoogleLoading(false);
+    }
+  };
+
+  // 6. Masuk dengan akun demo siswa (opsional dari modal)
+  const handleLoginDemoStudent = async () => {
+    setIsDemoLoading(true);
+    setErrorMessage(null);
+    const res = await signInWithDemoStudentAction();
+    setIsDemoLoading(false);
+
+    if (res?.error) {
+      setErrorMessage(res.error);
+    } else {
+      setShowGoogleModal(false);
+      router.push('/beranda');
     }
   };
 
@@ -207,7 +290,7 @@ function LoginForm() {
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
               {authMode === 'verify_email'
-                ? 'Langkah pengamanan akun. Masukkan kode verifikasi 6 digit yang dikirimkan ke kotak masuk email Anda.'
+                ? 'Buka email Anda dan klik tautan konfirmasi, atau gunakan verifikasi cepat di bawah.'
                 : authMode === 'register'
                 ? 'Bisa digunakan oleh seluruh siswa & pelajar untuk pencatatan belajar, vault berkas materi, dan bimbingan tutor AI.'
                 : 'Ruang belajar terpadu dengan asisten AI etis, proteksi berkas riset, dan pendamping disiplin harian Anda.'}
@@ -215,7 +298,7 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* Error Alert if any */}
+        {/* Error Alert */}
         {errorMessage && (
           <div className="rounded-xl bg-error-container/40 border border-error/30 p-space-md flex items-start gap-space-sm animate-in fade-in">
             <span className="material-symbols-outlined text-error text-[20px] flex-shrink-0 mt-0.5">
@@ -225,14 +308,12 @@ function LoginForm() {
               <p className="font-label-md text-label-md text-on-error-container font-semibold">
                 Perhatian
               </p>
-              <p className="font-body-sm text-body-sm text-on-error-container">
-                {errorMessage}
-              </p>
+              <p className="font-body-sm text-body-sm text-on-error-container">{errorMessage}</p>
             </div>
           </div>
         )}
 
-        {/* Success Alert if any */}
+        {/* Success Alert */}
         {successMessage && (
           <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-space-md flex items-start gap-space-sm animate-in fade-in">
             <span className="material-symbols-outlined text-emerald-600 text-[20px] flex-shrink-0 mt-0.5">
@@ -242,70 +323,116 @@ function LoginForm() {
               <p className="font-label-md text-label-md text-emerald-800 font-semibold">
                 Informasi
               </p>
-              <p className="font-body-sm text-body-sm text-emerald-700">
-                {successMessage}
-              </p>
+              <p className="font-body-sm text-body-sm text-emerald-700">{successMessage}</p>
             </div>
           </div>
         )}
 
         {/* ======================================================== */}
-        {/* VIEW 1: VERIFIKASI EMAIL (OTP)                          */}
+        {/* VIEW 1: VERIFIKASI EMAIL (LINK + KODE + INSTAN)          */}
         {/* ======================================================== */}
         {authMode === 'verify_email' ? (
           <div className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-lg animate-in fade-in">
-            <div className="flex flex-col items-center text-center space-y-2 py-2">
+            <div className="flex flex-col items-center text-center space-y-2 py-1">
               <div className="w-14 h-14 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary mb-1">
                 <span className="material-symbols-outlined text-[30px]">mark_email_read</span>
               </div>
               <h2 className="font-headline-md text-headline-md text-on-surface font-semibold">
-                Masukkan Kode Verifikasi
+                Konfirmasi Email Pelajar
               </h2>
               <p className="font-body-sm text-body-sm text-on-surface-variant max-w-xs">
-                Kode 6 digit telah dikirimkan ke:
+                Email konfirmasi telah dikirimkan ke:
                 <br />
                 <span className="font-semibold text-on-surface font-code-sm">{email}</span>
               </p>
             </div>
 
-            <form onSubmit={handleVerifyOtp} className="space-y-space-md">
-              <div className="space-y-space-xs">
-                <label className="font-label-sm text-label-sm text-on-surface text-center block" htmlFor="otp-input">
-                  Kode 6 Digit
+            {/* Opsi 1: Klik Tautan di Email */}
+            <div className="rounded-xl bg-surface-container-low p-space-md border border-outline-variant/30 space-y-2">
+              <div className="flex items-center gap-2 text-primary font-semibold font-label-md">
+                <span className="material-symbols-outlined text-[18px]">touch_app</span>
+                <span>Opsi 1: Tautan Email</span>
+              </div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                Buka email Anda dan klik tautan <strong>Confirm your mail / Verifikasi Akun</strong>. Jika sudah klik tautannya:
+              </p>
+              <button
+                type="button"
+                onClick={handleCheckEmailLink}
+                disabled={isCheckingLink}
+                className="w-full py-2.5 px-3 rounded-lg bg-secondary text-on-secondary font-label-md text-label-md shadow-sm hover:opacity-95 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-70"
+              >
+                {isCheckingLink ? (
+                  <>
+                    <span className="animate-spin material-symbols-outlined text-[18px]">progress_activity</span>
+                    <span>Memeriksa Status Tautan...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">done_all</span>
+                    <span>Saya Sudah Klik Tautan di Email</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Opsi 2: Kode 6 Digit */}
+            <form onSubmit={handleVerifyOtp} className="space-y-space-xs pt-1">
+              <div className="flex items-center justify-between">
+                <label className="font-label-sm text-label-sm text-on-surface" htmlFor="otp-input">
+                  Opsi 2: Masukkan Kode 6 Digit (jika ada)
                 </label>
+              </div>
+              <div className="flex gap-2">
                 <input
                   id="otp-input"
                   type="text"
-                  required
                   maxLength={8}
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9a-zA-Z]/g, ''))}
                   placeholder="123456"
-                  className="w-full py-3.5 text-center text-2xl tracking-[0.35em] font-code-sm font-bold rounded-xl bg-surface-container-low text-primary placeholder:text-outline/40 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all uppercase"
+                  className="flex-1 py-2.5 text-center text-lg tracking-[0.25em] font-code-sm font-bold rounded-lg bg-surface-container-low text-primary placeholder:text-outline/40 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all uppercase"
                 />
+                <button
+                  type="submit"
+                  disabled={isLoading || !otpCode.trim()}
+                  className="py-2.5 px-4 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-1 disabled:opacity-60"
+                >
+                  {isLoading ? (
+                    <span className="animate-spin material-symbols-outlined text-[18px]">progress_activity</span>
+                  ) : (
+                    <span>Verifikasi</span>
+                  )}
+                </button>
               </div>
+            </form>
 
+            {/* Opsi 3: Verifikasi Instan Cepat */}
+            <div className="pt-2 border-t border-surface-container-high text-center space-y-2">
               <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3.5 px-space-lg rounded-xl bg-primary text-on-primary font-label-lg text-label-lg shadow-md active:scale-[0.98] transition-all flex items-center justify-center space-x-space-xs hover:bg-primary-container disabled:opacity-75"
+                type="button"
+                onClick={handleInstantVerify}
+                disabled={isInstantVerifying}
+                className="w-full py-2.5 px-space-md rounded-xl bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold hover:opacity-90 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-60"
               >
-                {isLoading ? (
+                {isInstantVerifying ? (
                   <>
-                    <span className="animate-spin material-symbols-outlined text-[20px]">
-                      progress_activity
-                    </span>
-                    <span>Memverifikasi Kode...</span>
+                    <span className="animate-spin material-symbols-outlined text-[18px]">progress_activity</span>
+                    <span>Mengaktifkan Akun Instan...</span>
                   </>
                 ) : (
                   <>
-                    <span>Verifikasi &amp; Masuk</span>
-                    <span className="material-symbols-outlined text-[18px]">verified</span>
+                    <span className="material-symbols-outlined text-[18px]">bolt</span>
+                    <span>Verifikasi Instan Sekarang (Langsung Masuk)</span>
                   </>
                 )}
               </button>
-            </form>
+              <p className="font-code-sm text-[11px] text-on-surface-variant">
+                Bypass jeda pengiriman email dan konfirmasi akun secara langsung
+              </p>
+            </div>
 
+            {/* Link Kirim Ulang & Ganti Email */}
             <div className="flex flex-col items-center gap-2 pt-2 border-t border-surface-container-high text-center">
               <button
                 type="button"
@@ -314,7 +441,7 @@ function LoginForm() {
                 className="font-label-md text-label-md text-secondary hover:underline flex items-center gap-1 font-semibold disabled:opacity-60"
               >
                 <span className="material-symbols-outlined text-[16px]">refresh</span>
-                <span>Kirim Ulang Kode Verifikasi</span>
+                <span>Kirim Ulang Email Konfirmasi</span>
               </button>
               <button
                 type="button"
@@ -331,7 +458,7 @@ function LoginForm() {
           </div>
         ) : (
           /* ======================================================== */
-          /* VIEW 2: LOGIN / REGISTER FORM                           */
+          /* VIEW 2: LOGIN / REGISTER FORM                            */
           /* ======================================================== */
           <div className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-lg">
             <form onSubmit={handleSubmit} className="space-y-space-lg">
@@ -434,10 +561,7 @@ function LoginForm() {
 
                 {/* Password Strength Meter */}
                 <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden mt-1.5 flex">
-                  <div
-                    style={{ width: pwdMeterWidth }}
-                    className={pwdMeterClass}
-                  ></div>
+                  <div style={{ width: pwdMeterWidth }} className={pwdMeterClass}></div>
                 </div>
               </div>
 
@@ -467,7 +591,7 @@ function LoginForm() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => alert('Gunakan fitur reset kata sandi melalui email terdaftar.')}
+                    onClick={() => alert('Gunakan opsi reset kata sandi melalui email Anda.')}
                     className="font-label-md text-label-md text-primary hover:underline focus:outline-none"
                   >
                     Lupa Password?
@@ -486,14 +610,18 @@ function LoginForm() {
                     <span className="animate-spin material-symbols-outlined text-[20px]">
                       progress_activity
                     </span>
-                    <span>{authMode === 'register' ? 'Mendaftarkan Akun...' : 'Memverifikasi Akun...'}</span>
+                    <span>
+                      {authMode === 'register' ? 'Mendaftarkan Akun...' : 'Memverifikasi Akun...'}
+                    </span>
                   </>
                 ) : (
                   <>
-                    <span>{authMode === 'register' ? 'Daftar & Terima Kode Verifikasi' : 'Masuk ke Akun Belajar'}</span>
-                    <span className="material-symbols-outlined text-[18px]">
-                      arrow_forward
+                    <span>
+                      {authMode === 'register'
+                        ? 'Daftar & Terima Tautan Verifikasi'
+                        : 'Masuk ke Akun Belajar'}
                     </span>
+                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                   </>
                 )}
               </button>
@@ -568,6 +696,72 @@ function LoginForm() {
           </div>
         )}
       </main>
+
+      {/* ======================================================== */}
+      {/* MODAL: INFO AKTIVASI GOOGLE OAUTH SUPABASE               */}
+      {/* ======================================================== */}
+      {showGoogleModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl p-space-lg shadow-2xl border border-outline-variant/40 space-y-space-md">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2 text-primary">
+                <span className="material-symbols-outlined text-[24px]">info</span>
+                <h3 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
+                  Aktifkan Google Provider
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowGoogleModal(false)}
+                className="p-1 rounded-full text-on-surface-variant hover:bg-surface-container"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Supabase membutuhkan <strong>Google OAuth Client ID &amp; Secret</strong> dari Google Cloud Console agar tombol ini dapat membuka halaman pemilihan akun Google (<em>accounts.google.com</em>).
+            </p>
+
+            <div className="rounded-xl bg-surface-container p-space-sm space-y-1.5 font-code-sm text-[12px]">
+              <div className="text-on-surface-variant font-semibold">Callback URI untuk Google Console:</div>
+              <div className="bg-surface-container-lowest px-2 py-1.5 rounded border border-outline/20 select-all break-all text-primary font-bold">
+                {googleCallbackUrl}
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <a
+                href="https://supabase.com/dashboard/project/hklmxhsryozykwailkei/auth/providers"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 px-3 rounded-xl bg-primary text-on-primary font-label-md text-label-md font-semibold flex items-center justify-center gap-2 hover:opacity-95"
+              >
+                <span>Buka Supabase Google Provider</span>
+                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={handleLoginDemoStudent}
+                disabled={isDemoLoading}
+                className="w-full py-2.5 px-3 rounded-xl bg-secondary-fixed text-on-secondary-fixed font-label-md text-label-md font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 disabled:opacity-60"
+              >
+                {isDemoLoading ? (
+                  <>
+                    <span className="animate-spin material-symbols-outlined text-[18px]">progress_activity</span>
+                    <span>Menyiapkan Demo...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">school</span>
+                    <span>Gunakan Akun Uji Coba (Demo Siswa)</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -578,7 +772,9 @@ export default function LoginPage() {
       fallback={
         <div className="min-h-screen bg-surface flex items-center justify-center p-4">
           <div className="flex items-center gap-2 text-primary">
-            <span className="animate-spin material-symbols-outlined text-[24px]">progress_activity</span>
+            <span className="animate-spin material-symbols-outlined text-[24px]">
+              progress_activity
+            </span>
             <span className="font-label-md text-label-md">Memuat Portal Studika...</span>
           </div>
         </div>

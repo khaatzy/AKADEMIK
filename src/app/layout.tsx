@@ -20,6 +20,13 @@ export const metadata: Metadata = {
   title: "Studika - Academic Companion Web App",
   description:
     "Ruang belajar terpadu dengan asisten AI etis, proteksi privasi riset, dan pendamping disiplin harian Anda.",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

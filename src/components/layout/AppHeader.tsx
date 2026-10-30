@@ -27,10 +27,10 @@ export function AppHeader() {
           <div className="h-8 w-8 relative flex-shrink-0">
             <Image
               alt="Studika Logo"
-              src="https://lh3.googleusercontent.com/aida/AEtjO1Wu2Ehu1yczbpG4wqZuw18XPsVNgC9c1dRQtM-vXg3x1o6ALm2JFXBV4R3ue2-d-ZG-eZk1AamL_E1FJQGZlsHBMI4GaXt-o8e_FRmRTdJlJuQp2PFdZuc04AHui6WODHkTNTyl7qZCVxVhlp1Ly4imfjwcMTIY1lduBvrxmmTKYcq1OD2y78zIc7jiWj2oKQDKLFhkGbsCHVJ29k5G36jbuI7io5moy0378QlH2Yii-g"
-              fill
-              className="object-contain"
-              sizes="32px"
+              src="/logo.svg"
+              width={32}
+              height={32}
+              className="w-8 h-8 object-contain rounded-xl"
               priority
             />
           </div>
@@ -61,14 +61,8 @@ export function AppHeader() {
             title="Menu Akun & Profil"
             type="button"
           >
-            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-outline-variant/40">
-              <Image
-                alt="Profile Avatar"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFmfrqNDI1DOmXj3RD7Wu5qoP6oSC6cpjtbS3bOatUagc_WjFL7pYpV3LnG8KjuKzCjkw9PVqPoxlY1PfNhInLW3yjh-iG6cdluD_TwKK6vsCAKkKtfxL-pBmN_ZiUOyu-jCKYSXBdi6gDEdtHaergCKP6A5uZJtk43dC4uolCU2M65C6v0VxfsEAgt6rrZnTvCtV8qCTCNkJhtn0Lmgmu48XisCFTwW1TftTycyOF"
-                fill
-                className="object-cover"
-                sizes="32px"
-              />
+            <div className="w-8 h-8 rounded-full overflow-hidden relative border border-outline-variant/40 bg-secondary-fixed flex items-center justify-center text-secondary font-bold text-sm select-none">
+              <span>S</span>
             </div>
           </button>
 

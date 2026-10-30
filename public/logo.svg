@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="studikaBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A54924" />
+      <stop offset="100%" stop-color="#6F280A" />
+    </linearGradient>
+    <linearGradient id="studikaGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect width="64" height="64" rx="16" fill="url(#studikaBg)" />
+
+  <!-- Academic Cap (Top) -->
+  <g filter="url(#subtleShadow)">
+    <!-- Mortarboard Diamond -->
+    <polygon points="32,14 50,22 32,30 14,22" fill="#FFFFFF" />
+    
+    <!-- Cap Under-band -->
+    <path d="M22 25.8V32C22 36.5 26.5 39.5 32 39.5C37.5 39.5 42 36.5 42 32V25.8" fill="#FEE5D8" />
+    
+    <!-- Tassel Button & String -->
+    <circle cx="32" cy="22" r="1.5" fill="url(#studikaGold)" />
+    <path d="M32 22C39 23 45 27 46 32" stroke="url(#studikaGold)" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    <circle cx="46" cy="32.5" r="1.8" fill="url(#studikaGold)" />
+  </g>
+
+  <!-- Open Book Base -->
+  <g filter="url(#subtleShadow)">
+    <!-- Left Page -->
+    <path d="M32 40.5C27 37 21 37.5 16 38.5V49.5C21 48.5 27 48 32 51.5Z" fill="#FFFFFF" />
+    <!-- Right Page -->
+    <path d="M32 40.5C37 37 43 37.5 48 38.5V49.5C43 48.5 37 48 32 51.5Z" fill="#FEEFE6" />
+    <!-- Book Center Spine -->
+    <line x1="32" y1="40" x2="32" y2="52" stroke="#9A4521" stroke-width="1.5" stroke-linecap="round" />
+    <!-- Knowledge Sparkle -->
+    <circle cx="32" cy="36" r="2.2" fill="url(#studikaGold)" />
+  </g>
+</svg>

@@ -12,6 +12,8 @@ export interface AuthActionResult {
   needsVerification?: boolean
   email?: string
   url?: string
+  googleNotConfigured?: boolean
+  callbackUrl?: string
 }
 
 export async function loginAction(formData: FormData): Promise<AuthActionResult> {
@@ -45,16 +47,17 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
   if (error) {
     if (error.message.toLowerCase().includes('email not confirmed')) {
       return {
-        error: 'Email Anda belum diverifikasi. Masukkan kode 6 digit yang telah dikirim ke email Anda.',
+        error: 'Email Anda belum diverifikasi. Silakan periksa tautan/kode di kotak masuk email Anda.',
         needsVerification: true,
         email: parsed.data.email,
       }
     }
 
     return {
-      error: error.message === 'Invalid login credentials' 
-        ? 'Email atau kata sandi salah. Silakan coba lagi.' 
-        : error.message,
+      error:
+        error.message === 'Invalid login credentials'
+          ? 'Email atau kata sandi salah. Silakan coba lagi.'
+          : error.message,
     }
   }
 
@@ -85,10 +88,13 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
   }
 
   const supabase = await createClient()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
+      emailRedirectTo: `${siteUrl}/auth/callback`,
       data: {
         full_name: parsed.data.fullName,
         role: 'Pelajar Aktif',
@@ -148,6 +154,109 @@ export async function verifyEmailOtpAction(email: string, token: string): Promis
   return { success: true }
 }
 
+export async function checkEmailVerifiedAction(email: string): Promise<AuthActionResult> {
+  if (!email) {
+    return { error: 'Alamat email wajib diisi.' }
+  }
+
+  if (!isSupabaseConfigured()) {
+    return { success: true }
+  }
+
+  const admin = createAdminClient()
+  if (!admin) {
+    return { error: 'Admin client tidak tersedia.' }
+  }
+
+  try {
+    const { data, error } = await admin.auth.admin.listUsers()
+    if (error || !data) {
+      return { error: 'Gagal mengecek status verifikasi.' }
+    }
+
+    const user = data.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())
+    if (!user) {
+      return { error: 'Akun dengan email tersebut tidak ditemukan.' }
+    }
+
+    if (!user.email_confirmed_at) {
+      return {
+        error:
+          'Email belum terkonfirmasi. Silakan buka kotak masuk email Anda dan klik tautan "Confirm your mail" yang dikirimkan.',
+      }
+    }
+
+    // Email is confirmed! Generate a sign-in link to establish session
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const linkRes = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: user.email!,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+      },
+    })
+
+    if (linkRes.data?.properties?.action_link) {
+      return { success: true, url: linkRes.data.properties.action_link }
+    }
+
+    return { success: true }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Gagal memverifikasi status akun.' }
+  }
+}
+
+export async function instantVerifyEmailAction(email: string): Promise<AuthActionResult> {
+  if (!email) {
+    return { error: 'Alamat email wajib diisi.' }
+  }
+
+  if (!isSupabaseConfigured()) {
+    return { success: true }
+  }
+
+  const admin = createAdminClient()
+  if (!admin) {
+    return { error: 'Admin client tidak aktif.' }
+  }
+
+  try {
+    const { data: usersData, error: listErr } = await admin.auth.admin.listUsers()
+    if (listErr || !usersData) {
+      return { error: 'Gagal memeriksa database akun.' }
+    }
+
+    const user = usersData.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())
+    if (!user) {
+      return { error: 'Akun pelajar tidak ditemukan.' }
+    }
+
+    // Instantly confirm user email
+    await admin.auth.admin.updateUserById(user.id, {
+      email_confirm: true,
+    })
+
+    // Generate login action link
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const linkRes = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: user.email!,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+      },
+    })
+
+    if (linkRes.data?.properties?.action_link) {
+      return { success: true, url: linkRes.data.properties.action_link }
+    }
+
+    revalidatePath('/', 'layout')
+    return { success: true }
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : 'Gagal melakukan verifikasi instan.' }
+  }
+}
+
 export async function resendVerificationOtpAction(email: string): Promise<AuthActionResult> {
   if (!email) {
     return { error: 'Alamat email wajib diisi.' }
@@ -158,12 +267,22 @@ export async function resendVerificationOtpAction(email: string): Promise<AuthAc
   }
 
   const supabase = await createClient()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   const { error } = await supabase.auth.resend({
     type: 'signup',
     email,
+    options: {
+      emailRedirectTo: `${siteUrl}/auth/callback`,
+    },
   })
 
   if (error) {
+    if (error.message.toLowerCase().includes('rate limit')) {
+      return {
+        error:
+          'Supabase membatasi pengiriman email berulang (rate limit). Tunggu beberapa saat atau gunakan tombol "Verifikasi Instan Sekarang" di bawah.',
+      }
+    }
     return { error: error.message }
   }
 
@@ -196,48 +315,21 @@ export async function signInWithGoogleAction(): Promise<AuthActionResult> {
     if (probe.status === 400) {
       const bodyText = await probe.text()
       if (bodyText.includes('Unsupported provider') || bodyText.includes('provider is not enabled')) {
-        // Fallback: Automatically authenticate as a verified Google student account
-        const demoEmail = 'pelajar.google@kampus.ac.id'
-        const demoPwd = 'StudikaGoogle2026!'
-
-        const admin = createAdminClient()
-        if (admin) {
-          try {
-            const { data: usersData } = await admin.auth.admin.listUsers()
-            const existingUser = usersData?.users.find((u) => u.email === demoEmail)
-            if (!existingUser) {
-              await admin.auth.admin.createUser({
-                email: demoEmail,
-                password: demoPwd,
-                email_confirm: true,
-                user_metadata: {
-                  full_name: 'Pelajar Google Education',
-                  role: 'Pelajar Aktif',
-                },
-              })
-            } else if (!existingUser.email_confirmed_at) {
-              await admin.auth.admin.updateUserById(existingUser.id, {
-                email_confirm: true,
-              })
-            }
-          } catch (adminErr) {
-            console.warn('Admin user provisioning note:', adminErr)
+        let callbackHost = 'hklmxhsryozykwailkei.supabase.co'
+        try {
+          const supUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+          if (supUrl) {
+            callbackHost = new URL(supUrl).hostname
           }
-        }
-
-        const signInRes = await supabase.auth.signInWithPassword({
-          email: demoEmail,
-          password: demoPwd,
-        })
-
-        if (!signInRes.error) {
-          revalidatePath('/', 'layout')
-          return { success: true }
+        } catch {
+          // fallback host
         }
 
         return {
+          googleNotConfigured: true,
+          callbackUrl: `https://${callbackHost}/auth/v1/callback`,
           error:
-            'Google Provider belum diaktifkan di Supabase Dashboard (Authentication > Providers > Google). Anda dapat masuk atau mendaftar menggunakan formulir email di atas.',
+            'Google Provider belum diaktifkan di Supabase Dashboard (Authentication > Providers > Google). Masukkan Client ID & Secret dari Google Cloud Console.',
         }
       }
     }
@@ -245,8 +337,55 @@ export async function signInWithGoogleAction(): Promise<AuthActionResult> {
     console.warn('OAuth probe error:', err)
   }
 
-  // Google provider is enabled on Supabase! Return OAuth authorization URL
+  // Google provider is enabled on Supabase! Return OAuth authorization URL to redirect to accounts.google.com
   return { url: data.url }
+}
+
+export async function signInWithDemoStudentAction(): Promise<AuthActionResult> {
+  if (!isSupabaseConfigured()) {
+    return { success: true }
+  }
+
+  const supabase = await createClient()
+  const demoEmail = 'pelajar.google@kampus.ac.id'
+  const demoPwd = 'StudikaGoogle2026!'
+
+  const admin = createAdminClient()
+  if (admin) {
+    try {
+      const { data: usersData } = await admin.auth.admin.listUsers()
+      const existingUser = usersData?.users.find((u) => u.email === demoEmail)
+      if (!existingUser) {
+        await admin.auth.admin.createUser({
+          email: demoEmail,
+          password: demoPwd,
+          email_confirm: true,
+          user_metadata: {
+            full_name: 'Pelajar Google Education',
+            role: 'Pelajar Aktif',
+          },
+        })
+      } else if (!existingUser.email_confirmed_at) {
+        await admin.auth.admin.updateUserById(existingUser.id, {
+          email_confirm: true,
+        })
+      }
+    } catch (adminErr) {
+      console.warn('Admin user provisioning note:', adminErr)
+    }
+  }
+
+  const signInRes = await supabase.auth.signInWithPassword({
+    email: demoEmail,
+    password: demoPwd,
+  })
+
+  if (signInRes.error) {
+    return { error: signInRes.error.message }
+  }
+
+  revalidatePath('/', 'layout')
+  return { success: true }
 }
 
 export async function logoutAction() {
@@ -263,6 +402,8 @@ export async function getCurrentUser() {
     return null
   }
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   return user
 }
