@@ -10,9 +10,6 @@ export const registerSchema = z.object({
   email: z.string().email('Format email tidak valid'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
   fullName: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
-  nim: z.string().optional(),
-  programStudi: z.string().optional(),
-  semester: z.coerce.number().min(1).max(14).default(4),
 })
 
 // 2. Task Schemas
