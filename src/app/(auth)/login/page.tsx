@@ -2,14 +2,21 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { loginAction, registerAction } from '@/lib/actions/auth';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [nim, setNim] = useState('220411100042');
+  const [programStudi, setProgramStudi] = useState('Teknik Informatika');
+  const [semester] = useState('4');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Email validation and domain detection
   const normalizedEmail = email.trim().toLowerCase();
@@ -67,14 +74,37 @@ export default function LoginPage() {
     }
   }
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulated fast auth flow as specified in Issue #1
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push('/beranda');
-    }, 600);
+    setErrorMessage(null);
+
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('password', password);
+
+    if (isRegisterMode) {
+      formData.append('fullName', fullName);
+      formData.append('nim', nim);
+      formData.append('programStudi', programStudi);
+      formData.append('semester', semester);
+
+      const res = await registerAction(formData);
+      if (res?.error) {
+        setErrorMessage(res.error);
+        setIsLoading(false);
+      } else {
+        router.push('/beranda');
+      }
+    } else {
+      const res = await loginAction(formData);
+      if (res?.error) {
+        setErrorMessage(res.error);
+        setIsLoading(false);
+      } else {
+        router.push('/beranda');
+      }
+    }
   };
 
   return (
@@ -93,17 +123,91 @@ export default function LoginPage() {
               </span>
             </div>
             <h1 className="font-headline-lg text-headline-lg text-on-surface pt-space-xs font-semibold">
-              Selamat Datang di Studika
+              {isRegisterMode ? 'Daftar Akun Mahasiswa' : 'Selamat Datang di Studika'}
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Ruang belajar terpadu dengan asisten AI etis, proteksi privasi riset, dan pendamping disiplin harian Anda.
+              {isRegisterMode
+                ? 'Buat akun untuk memulai pencatatan kuliah terpadu, vault materi aman, dan bimbingan tutor AI.'
+                : 'Ruang belajar terpadu dengan asisten AI etis, proteksi privasi riset, dan pendamping disiplin harian Anda.'}
             </p>
           </div>
         </div>
 
-        {/* Main Login Form Container */}
+        {/* Error Alert if any */}
+        {errorMessage && (
+          <div className="rounded-xl bg-error-container/40 border border-error/30 p-space-md flex items-start gap-space-sm">
+            <span className="material-symbols-outlined text-error text-[20px] flex-shrink-0 mt-0.5">
+              error
+            </span>
+            <div className="flex-1">
+              <p className="font-label-md text-label-md text-on-error-container font-semibold">
+                Perhatian
+              </p>
+              <p className="font-body-sm text-body-sm text-on-error-container">
+                {errorMessage}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Main Login / Register Form Container */}
         <div className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-lg">
-          <form onSubmit={handleLogin} className="space-y-space-lg">
+          <form onSubmit={handleSubmit} className="space-y-space-lg">
+            {isRegisterMode && (
+              <>
+                {/* Full Name */}
+                <div className="space-y-space-xs">
+                  <label className="font-label-lg text-label-lg text-on-surface" htmlFor="student-name">
+                    Nama Lengkap
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-space-md text-on-surface-variant material-symbols-outlined text-[20px] pointer-events-none">
+                      person
+                    </span>
+                    <input
+                      id="student-name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Samiaji Rahadian"
+                      type="text"
+                      required
+                      className="w-full pl-11 pr-4 py-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* NIM & Program Studi */}
+                <div className="grid grid-cols-2 gap-space-sm">
+                  <div className="space-y-space-xs">
+                    <label className="font-label-sm text-label-sm text-on-surface" htmlFor="student-nim">
+                      NIM Mahasiswa
+                    </label>
+                    <input
+                      id="student-nim"
+                      value={nim}
+                      onChange={(e) => setNim(e.target.value)}
+                      placeholder="220411100042"
+                      type="text"
+                      className="w-full px-3 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                  <div className="space-y-space-xs">
+                    <label className="font-label-sm text-label-sm text-on-surface" htmlFor="student-prodi">
+                      Program Studi
+                    </label>
+                    <input
+                      id="student-prodi"
+                      value={programStudi}
+                      onChange={(e) => setProgramStudi(e.target.value)}
+                      placeholder="Teknik Informatika"
+                      type="text"
+                      className="w-full px-3 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             {/* Email Field */}
             <div className="space-y-space-xs">
               <div className="flex items-center justify-between">
@@ -187,36 +291,39 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between pt-space-xs">
-              <label className="flex items-center space-x-2 cursor-pointer select-none">
-                <input
-                  id="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-5 h-5 rounded-DEFAULT bg-surface-container-high peer-checked:bg-primary flex items-center justify-center text-on-primary transition-colors">
-                  <span
-                    className={`material-symbols-outlined text-[16px] font-bold transition-transform ${
-                      rememberMe ? 'scale-100' : 'scale-0'
-                    }`}
-                  >
-                    check
+            {!isRegisterMode && (
+              /* Remember Me & Forgot Password */
+              <div className="flex items-center justify-between pt-space-xs">
+                <label className="flex items-center space-x-2 cursor-pointer select-none">
+                  <input
+                    id="remember-me"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-5 h-5 rounded-DEFAULT bg-surface-container-high peer-checked:bg-primary flex items-center justify-center text-on-primary transition-colors">
+                    <span
+                      className={`material-symbols-outlined text-[16px] font-bold transition-transform ${
+                        rememberMe ? 'scale-100' : 'scale-0'
+                      }`}
+                    >
+                      check
+                    </span>
+                  </div>
+                  <span className="font-body-sm text-body-sm text-on-surface-variant">
+                    Ingat Saya
                   </span>
-                </div>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">
-                  Ingat Saya
-                </span>
-              </label>
-              <button
-                type="button"
-                className="font-label-md text-label-md text-primary hover:underline focus:outline-none"
-              >
-                Lupa Password?
-              </button>
-            </div>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => alert('Gunakan fitur reset kata sandi lewat email terdaftar.')}
+                  className="font-label-md text-label-md text-primary hover:underline focus:outline-none"
+                >
+                  Lupa Password?
+                </button>
+              </div>
+            )}
 
             {/* CTA Primary Submit Button */}
             <button
@@ -229,11 +336,11 @@ export default function LoginPage() {
                   <span className="animate-spin material-symbols-outlined text-[20px]">
                     progress_activity
                   </span>
-                  <span>Memverifikasi Akun...</span>
+                  <span>{isRegisterMode ? 'Mendaftarkan Akun...' : 'Memverifikasi Akun...'}</span>
                 </>
               ) : (
                 <>
-                  <span>Masuk ke Akun Belajar</span>
+                  <span>{isRegisterMode ? 'Buat Akun Pelajar' : 'Masuk ke Akun Belajar'}</span>
                   <span className="material-symbols-outlined text-[18px]">
                     arrow_forward
                   </span>
@@ -301,15 +408,19 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Register Link Footer */}
+        {/* Mode Toggle Footer */}
         <div className="text-center pt-space-xs pb-space-lg">
           <p className="font-body-md text-body-md text-on-surface-variant">
-            Belum punya akun pelajar?{' '}
+            {isRegisterMode ? 'Sudah memiliki akun?' : 'Belum punya akun pelajar?'}{' '}
             <button
-              onClick={() => alert('Fitur pendaftaran akun institusi segera hadir.')}
+              type="button"
+              onClick={() => {
+                setIsRegisterMode(!isRegisterMode);
+                setErrorMessage(null);
+              }}
               className="font-label-lg text-label-lg text-primary hover:underline ml-1 font-semibold"
             >
-              Daftar gratis sekarang
+              {isRegisterMode ? 'Masuk sekarang' : 'Daftar gratis sekarang'}
             </button>
           </p>
         </div>
