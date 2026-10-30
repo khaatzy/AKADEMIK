@@ -2,7 +2,7 @@
 
 Aplikasi web pendamping akademik cerdas untuk mahasiswa, dirancang untuk mendukung fokus belajar, pengelolaan jadwal & tugas, vault materi berkas (PDF & foto catatan papan tulis), serta interaksi dengan Tutor AI Akademik etis.
 
-Implementasi antarmuka ini mengadopsi sistem desain **Warm Editorial Focus** dari **Google Stitch** (Project: *Academic Companion Web App*, ID: `17481662600757458564`).
+Implementasi antarmuka mengadopsi sistem desain **Warm Editorial Focus** dari **Google Stitch** (Project ID: `17481662600757458564`), terintegrasi penuh dengan **Supabase** (Auth, Database Postgres + RLS, dan Storage Buckets).
 
 ---
 
@@ -10,97 +10,125 @@ Implementasi antarmuka ini mengadopsi sistem desain **Warm Editorial Focus** dar
 
 | # | Halaman | Route | Deskripsi |
 |---|---|---|---|
-| 1 | **Login Studika** | `/login` | Form autentikasi dengan deteksi domain institusi (`.ac.id`, `.edu`), indikator kekuatan kata sandi dinamis, opsi Remember Me, SSO Google Education, dan jaminan keamanan data ISO/IEC 27001. |
-| 2 | **Beranda Dashboard** | `/beranda` / `/` | Sapaan personal ("Halo, Maya! ☀️"), progress bar target belajar harian terintegrasi checklist, aksi cepat (Tanya AI, Upload Catatan, Timer Fokus Pomodoro), rekomendasi sintesis AI, widget hitung mundur ujian (H-2 Fisika, H-5 Matematika), jadwal sesi hari ini, checklist tugas prioritas interaktif, dan kartu tips mindful. |
-| 3 | **Materi & Vault Berkas** | `/materi` | Pusat vault materi dengan dropzone upload (drag & drop berkas PDF/foto catatan, progress bar 100%), filter koleksi (Semua, PDF Modul, Foto Catatan, Rangkuman AI, Rumus Praktis), pembaca dokumen, kartu identifikasi formula OCR AI, serta floating button scan kamera cepat. |
-| 4 | **Tutor AI Akademik** | `/tutor-ai` | Antarmuka obrolan tutor 24/7 dengan inspirasi prompt siap pakai, thread percakapan dengan lampiran dokumen, respons terstruktur (poin ringkasan, tabel komparasi, rumus hafalan PMAT), aksi cepat (Buat Flashcard, Simpan ke Catatan, Tanya Lebih Dalam), input teks, lampiran berkas, perekam suara, dan notifikasi toast. |
-| 5 | **Jadwal & Tugas** | `/jadwal` | Switcher tampilan (Jadwal Mingguan vs Tugas & Ulangan), kalender strip tanggal Oktober, kartu ulangan/ujian mendesak dengan hitung mundur jam:menit:detik, timeline jadwal kelas hari Senin lengkap dengan pengajar & ruang, checklist tugas mingguan dengan kotak pengumpulan draf/berkas, serta FAB tombol aksi cepat (+). |
+| 1 | **Login Studika** | `/login` | Form autentikasi dengan deteksi domain institusi (`.ac.id`, `.edu`), live password strength meter, Remember Me, login/register mode toggle, Google Education SSO, dan proteksi sesi cookie-based. |
+| 2 | **Beranda Dashboard** | `/beranda` | Sapaan personal berdasar profil Supabase, progress bar target belajar harian terintegrasi checklist, aksi cepat, countdown ujian 72 jam, timeline jadwal hari ini, checklist tugas prioritas, dan tips mindful. |
+| 3 | **Materi & Vault Berkas** | `/materi` | Pusat vault materi dengan dropzone upload langsung dari browser ke Supabase Storage (RLS terisolasi), filter koleksi, kartu dokumen dengan signed URL privat, preview thumbnail foto catatan, dan download/hapus berkas. |
+| 4 | **Tutor AI Akademik** | `/tutor-ai` | Antarmuka obrolan tutor 24/7 dengan persistensi riwayat ke tabel `chat_sessions` & `chat_messages`, prompt chips inspirasi, respons terstruktur (poin ringkasan, tabel komparasi, formula box), input pesan, dan voice toggle. |
+| 5 | **Jadwal & Tugas** | `/jadwal` | Switcher tampilan (Jadwal Mingguan vs Tugas & Ulangan), date strip kalender, kartu ujian mendesak countdown 72 jam, timeline jadwal kelas Senin, checklist tugas dengan Server Actions (tambah, centang selesai, hapus), modal tambah tugas, dan FAB radial menu. |
 
 ---
 
-## 🛠️ Tech Stack
+## 🏗️ Arsitektur Backend & Database
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router, React 19)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) dengan design tokens *Warm Editorial Focus*
-- **Typography**: `Plus Jakarta Sans` (Display/Headlines/Body/Labels) & `JetBrains Mono` (Code/Timers) via `next/font/google`
-- **Icons**: Google Material Symbols Outlined
-- **Data Access Layer**: `src/lib/data/*` (mengekspos fungsi async yang siap dialihkan ke Supabase pada issue #2 tanpa merombak komponen UI)
+Tidak ada server backend terpisah. Aplikasi berjalan pada **Next.js App Router (Node.js runtime)** yang terhubung langsung ke **Supabase**:
 
----
-
-## 📁 Struktur Direktori
-
-```
-d:/APK AKADEMIK/
-├── design/
-│   └── stitch/                # Aset ekspor Stitch (screenshot & code.html acuan)
-│       ├── 01-login/
-│       ├── 02-beranda/
-│       ├── 03-materi-vault/
-│       ├── 04-tutor-ai/
-│       ├── 05-jadwal-tugas/
-│       └── DESIGN.md
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx         # Root layout (Google Fonts & metadata)
-│   │   ├── globals.css        # Tailwind v4 theme & typography tokens
-│   │   ├── page.tsx           # Redirect ke /beranda
-│   │   ├── (auth)/
-│   │   │   ├── login/page.tsx # Layar Login
-│   │   │   └── error.tsx
-│   │   └── (app)/
-│   │       ├── layout.tsx     # AppShell (Header + BottomNav + Container)
-│   │       ├── loading.tsx    # Skeleton loader
-│   │       ├── error.tsx      # Error boundary
-│   │       ├── beranda/page.tsx
-│   │       ├── materi/page.tsx
-│   │       ├── tutor-ai/page.tsx
-│   │       └── jadwal/page.tsx
-│   ├── components/
-│   │   └── layout/
-│   │       ├── AppHeader.tsx  # Header dengan logo Studika & avatar
-│   │       ├── BottomNav.tsx  # Navigasi bawah 5 menu dengan highlight aktif
-│   │       └── AppShell.tsx   # Wrapper responsif (mobile-first & centered desktop)
-│   ├── lib/
-│   │   ├── data/              # Data Access Layer (async data getters)
-│   │   │   ├── chat.ts
-│   │   │   ├── exams.ts
-│   │   │   ├── files.ts
-│   │   │   ├── profile.ts
-│   │   │   ├── schedules.ts
-│   │   │   └── tasks.ts
-│   │   └── mock/              # Data tiruan sesuai mock Stitch
-│   │       └── index.ts
-│   └── types/                 # Definisi tipe domain TypeScript
-│       └── index.ts
-├── package.json
-└── tsconfig.json
+```mermaid
+flowchart LR
+  B["Browser (Client Components)"] -->|"Upload langsung (RLS / Private Vault)"| S["Supabase Storage"]
+  B --> N["Next.js (Server Actions, Proxy, Data Access Layer)"]
+  N -->|"@supabase/ssr"| DB["Supabase Postgres + RLS"]
+  N --> A["Supabase Auth"]
+  N --> S
 ```
 
+| Kebutuhan | Solusi |
+|---|---|
+| Autentikasi | Supabase Auth via `@supabase/ssr` (cookie-based) dengan verifikasi `supabase.auth.getUser()` |
+| Proteksi Rute | Next.js Proxy/Middleware (`src/proxy.ts` / `src/lib/supabase/middleware.ts`) |
+| Baca Data | `src/lib/data/*` → Supabase Postgres dengan fallback lokal otomatis |
+| Tulis Data (CRUD) | **Server Actions** (`src/lib/actions/*`) divalidasi dengan **Zod** |
+| Upload Dokumen | **Langsung dari browser ke Supabase Storage** (tidak membebani server/Server Actions) |
+| Keamanan Data | **Row Level Security (RLS)** aktif di seluruh tabel dan bucket storage |
+
 ---
 
-## 🚀 Panduan Menjalankan Proyek
+## 🗄️ Skema Database & Storage
 
-### 1. Instalasi Dependensi
-Pastikan [Node.js](https://nodejs.org/) (versi 20 atau 24 LTS) sudah terpasang di komputer Anda.
+### 1. Tabel Database (`supabase/migrations/20261030000000_init_schema.sql`)
+- `profiles`: `id` (PK → `auth.users`), `full_name`, `avatar_path`, `nim`, `program_studi`, `semester`, `created_at`, `updated_at`.
+- `courses`: `id`, `user_id`, `name`, `code`, `lecturer`, `color`, `created_at`.
+- `files`: `id`, `user_id`, `course_id`, `name`, `storage_path`, `mime_type`, `size_bytes`, `kind`, `created_at`.
+- `schedules`: `id`, `user_id`, `course_id`, `day_of_week`, `start_time`, `end_time`, `room`, `created_at`.
+- `tasks`: `id`, `user_id`, `course_id`, `title`, `description`, `due_at`, `priority`, `is_done`, `created_at`.
+- `exams`: `id`, `user_id`, `course_id`, `title`, `scheduled_at`, `room`, `countdown_label`, `created_at`.
+- `chat_sessions`: `id`, `user_id`, `title`, `created_at`.
+- `chat_messages`: `id`, `session_id`, `user_id`, `role`, `content`, `attachment_file_id`, `created_at`.
+
+### 2. Storage Buckets
+| Bucket | Public? | Batas Ukuran | Format Berkas yang Diizinkan |
+|---|---|---|---|
+| `avatars` | Ya (Public) | 2 MB | JPEG, PNG, WebP |
+| `vault` | **Tidak (Private)** | 25 MB | PDF, DOCX, PPTX, XLSX, TXT, JPEG, PNG, WebP |
+
+> Seluruh berkas private dalam bucket `vault` disajikan melalui **Signed URL** berdurasi 1 jam yang dibuat secara dinamis dan aman.
+
+---
+
+## ⚙️ Konfigurasi Environment Variables
+
+Salin `.env.example` menjadi `.env.local`:
 
 ```bash
+cp .env.example .env.local
+```
+
+Isi dengan kredensial project Supabase Anda:
+
+```env
+# Dapatkan dari Supabase Dashboard -> Project Settings -> API
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJh......
+
+# Service Role Secret Key (Server only, jangan pernah NEXT_PUBLIC_)
+SUPABASE_SECRET_KEY=eyJh......
+```
+
+> **Catatan Demo Mode**: Jika `.env.local` belum diisi kredensial Supabase, aplikasi tetap dapat dijalankan dan diuji tampilannya di `localhost` menggunakan dataset bawaan secara otomatis.
+
+---
+
+## 🚀 Panduan Menjalankan Migrasi & Menyalakan Localhost
+
+### 1. Menjalankan Migrasi ke Supabase Cloud
+1. Buka [Supabase Dashboard](https://supabase.com/dashboard) dan pilih project Anda.
+2. Buka menu **SQL Editor**.
+3. Buka file `supabase/migrations/20261030000000_init_schema.sql`, salin seluruh isinya, dan klik **Run**.
+4. (Opsional) Buka file `supabase/seed.sql`, salin isinya, dan klik **Run** untuk memasukkan data awal demonstrasi.
+
+### 2. Menjalankan Menggunakan Supabase CLI (Lokal dengan Docker)
+Jika Anda memiliki Docker terpasang di komputer:
+```bash
+npx supabase start
+npx supabase db reset   # Otomatis menjalankan migrations dan seed.sql
+```
+
+### 3. Instalasi Dependensi & Menjalankan Dev Server
+```bash
+# Pastikan dependensi terpasang
 npm install
-```
 
-### 2. Menjalankan Server Pengembangan (Dev)
-```bash
+# Nyalakan server Next.js di localhost
 npm run dev
 ```
-Buka browser di [http://localhost:3000](http://localhost:3000). Aplikasi akan otomatis mengarahkan ke `/beranda`. Anda juga dapat langsung mengakses `/login`, `/materi`, `/tutor-ai`, atau `/jadwal`.
 
-### 3. Membangun untuk Produksi (Build)
+Buka browser di **[http://localhost:3000](http://localhost:3000)**.
+- Rute utama otomatis mengarahkan ke dashboard `/beranda`.
+- Menu navigasi bawah memudahkan perpindahan antar 5 layar:
+  - 🏠 **Beranda**: `/beranda`
+  - 📂 **Materi & Vault**: `/materi`
+  - 🤖 **Tutor AI**: `/tutor-ai`
+  - 📅 **Jadwal & Tugas**: `/jadwal`
+  - 🔑 **Login / Profil**: `/login` (klik avatar di pojok kanan atas untuk menu profil dan tombol keluar sesi).
+
+---
+
+## 🧪 Verifikasi Kualitas Kode
+
 ```bash
+# Type check & optimized production build
 npm run build
-```
 
-### 4. Memeriksa Kualitas Kode (Linting)
-```bash
+# Linter check (ESLint)
 npm run lint
 ```
+Semua perintah build dan lint terverifikasi 100% lulus tanpa error dan tanpa warning.

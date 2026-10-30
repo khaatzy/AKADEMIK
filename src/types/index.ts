@@ -5,6 +5,9 @@ export interface Profile {
   avatarUrl: string;
   role: string;
   institution: string;
+  nim?: string;
+  programStudi?: string;
+  semester?: number;
 }
 
 export interface Course {
@@ -27,6 +30,8 @@ export interface FileItem {
   uploadedAt: string;
   pageCount?: number;
   imageUrl?: string;
+  storagePath?: string;
+  previewUrl?: string;
   ocrStatus?: string;
   identifiedCount?: string;
   lastRead?: string;
@@ -73,8 +78,29 @@ export interface ExamItem {
   priority: TaskPriority;
   priorityLabel: string;
   description?: string;
-  countdownSeconds?: number;
   urgent?: boolean;
+}
+
+export interface DailyProgress {
+  completed?: number;
+  total?: number;
+  percentage?: number;
+  message?: string;
+  completedTasks?: number;
+  totalTasks?: number;
+  progressPercent?: number;
+  streakDays?: number;
+}
+
+export interface ChatPoint {
+  num: number;
+  title: string;
+  desc: string;
+}
+
+export interface ComparisonTable {
+  headers: string[];
+  rows: string[][];
 }
 
 export interface ChatMessage {
@@ -84,25 +110,20 @@ export interface ChatMessage {
   timestamp: string;
   attachmentName?: string;
   attachmentMeta?: string;
-  comparisonTable?: {
-    headers: string[];
-    rows: string[][];
+  points?: ChatPoint[];
+  comparisonTable?: ComparisonTable;
+  tableComparison?: {
+    title: string;
+    columns: string[];
+    rows: {
+      parameter: string;
+      inversion: string;
+      gauss: string;
+    }[];
   };
   keyFormula?: {
     title: string;
     description: string;
     badge: string;
   };
-  points?: {
-    num: number;
-    title: string;
-    desc: string;
-  }[];
-}
-
-export interface DailyProgress {
-  completed: number;
-  total: number;
-  percentage: number;
-  message: string;
 }
