@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import {
   loginAction,
   registerAction,
@@ -13,6 +14,14 @@ import {
   signInWithDemoStudentAction,
 } from '@/lib/actions/auth';
 
+const EDUCATION_LEVEL_OPTIONS = [
+  { value: 'SD / Madrasah Ibtidaiyah', label: 'SD / MI (Sekolah Dasar)' },
+  { value: 'SMP / MTs', label: 'SMP / MTs (Menengah Pertama)' },
+  { value: 'SMA / SMK / MA', label: 'SMA / SMK / MA (Menengah Atas)' },
+  { value: 'Perguruan Tinggi', label: 'Perguruan Tinggi (Diploma / Sarjana)' },
+  { value: 'Umum / Pembelajar Mandiri', label: 'Umum / Pembelajar Mandiri' },
+];
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,6 +31,9 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [educationLevel, setEducationLevel] = useState('SMA / SMK / MA');
+  const [institution, setInstitution] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -114,6 +126,9 @@ function LoginForm() {
 
     if (authMode === 'register') {
       formData.append('fullName', fullName);
+      formData.append('birthDate', birthDate);
+      formData.append('educationLevel', educationLevel);
+      formData.append('institution', institution);
 
       const res = await registerAction(formData);
       setIsLoading(false);
@@ -123,7 +138,7 @@ function LoginForm() {
       } else if (res?.needsVerification) {
         setAuthMode('verify_email');
         setSuccessMessage(
-          `Tautan konfirmasi telah dikirim ke ${email}. Silakan cek kotak masuk email Anda.`
+          `Tautan atau kode konfirmasi telah dikirim ke ${email}. Silakan cek kotak masuk email Anda.`
         );
       } else {
         router.push('/beranda');
@@ -188,7 +203,7 @@ function LoginForm() {
     }
   };
 
-  // 3. Verifikasi instan (Langsung aktifkan akun di Supabase)
+  // 3. Verifikasi instan
   const handleInstantVerify = async () => {
     setIsInstantVerifying(true);
     setErrorMessage(null);
@@ -219,7 +234,7 @@ function LoginForm() {
     if (res?.error) {
       setErrorMessage(res.error);
     } else {
-      setSuccessMessage(`Tautan konfirmasi baru berhasil dikirim ke ${email}. Periksa inbox atau folder spam.`);
+      setSuccessMessage(`Email konfirmasi baru berhasil dikirim ke ${email}. Periksa inbox atau spam.`);
     }
   };
 
@@ -232,7 +247,7 @@ function LoginForm() {
       setIsGoogleLoading(false);
 
       if (res?.url) {
-        // Provider aktif! Redirect ke accounts.google.com
+        // Provider aktif! Redirect langsung ke accounts.google.com
         window.location.href = res.url;
       } else if (res?.googleNotConfigured) {
         // Provider belum diaktifkan di Supabase Dashboard
@@ -241,7 +256,7 @@ function LoginForm() {
       } else if (res?.error) {
         setErrorMessage(res.error);
       } else if (res?.success) {
-        router.push('/beranda');
+        router.push('/lengkapi-profil');
       }
     } catch (err: unknown) {
       const message =
@@ -251,7 +266,7 @@ function LoginForm() {
     }
   };
 
-  // 6. Masuk dengan akun demo siswa (opsional dari modal)
+  // 6. Masuk dengan akun demo siswa
   const handleLoginDemoStudent = async () => {
     setIsDemoLoading(true);
     setErrorMessage(null);
@@ -262,7 +277,8 @@ function LoginForm() {
       setErrorMessage(res.error);
     } else {
       setShowGoogleModal(false);
-      router.push('/beranda');
+      // Diarahkan ke halaman lengkapi profil baru
+      router.push(res.redirectUrl || '/lengkapi-profil');
     }
   };
 
@@ -270,13 +286,20 @@ function LoginForm() {
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-margin pt-safe pb-safe">
       <main className="w-full max-w-md flex flex-col space-y-space-lg">
         {/* Welcoming Branding Card */}
-        <div className="relative overflow-hidden rounded-xl bg-surface-container-low p-space-lg shadow-sm">
+        <div className="relative overflow-hidden rounded-2xl bg-surface-container-low p-space-lg shadow-sm border border-outline-variant/30">
           <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-secondary-fixed/20 pointer-events-none"></div>
           <div className="relative z-10 flex flex-col space-y-space-xs">
             <div className="flex items-center space-x-space-xs">
-              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary">
-                <span className="material-symbols-outlined text-[18px]">school</span>
-              </span>
+              <div className="w-8 h-8 relative flex-shrink-0">
+                <Image
+                  alt="Studika Logo"
+                  src="/logo.svg"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain rounded-lg"
+                  priority
+                />
+              </div>
               <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">
                 Portal Pelajar &amp; Siswa
               </span>
@@ -290,9 +313,9 @@ function LoginForm() {
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
               {authMode === 'verify_email'
-                ? 'Buka email Anda dan klik tautan konfirmasi, atau gunakan verifikasi cepat di bawah.'
+                ? 'Buka email Anda dan klik tautan konfirmasi atau masukkan kode verifikasi.'
                 : authMode === 'register'
-                ? 'Bisa digunakan oleh seluruh siswa & pelajar untuk pencatatan belajar, vault berkas materi, dan bimbingan tutor AI.'
+                ? 'Lengkapi data diri pelajar Anda untuk mulai menggunakan vault berkas materi dan tutor AI.'
                 : 'Ruang belajar terpadu dengan asisten AI etis, proteksi berkas riset, dan pendamping disiplin harian Anda.'}
             </p>
           </div>
@@ -332,7 +355,7 @@ function LoginForm() {
         {/* VIEW 1: VERIFIKASI EMAIL (LINK + KODE + INSTAN)          */}
         {/* ======================================================== */}
         {authMode === 'verify_email' ? (
-          <div className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-lg animate-in fade-in">
+          <div className="rounded-2xl bg-surface-container-lowest p-space-lg shadow-sm border border-outline-variant/30 space-y-space-lg animate-in fade-in">
             <div className="flex flex-col items-center text-center space-y-2 py-1">
               <div className="w-14 h-14 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary mb-1">
                 <span className="material-symbols-outlined text-[30px]">mark_email_read</span>
@@ -354,7 +377,7 @@ function LoginForm() {
                 <span>Opsi 1: Tautan Email</span>
               </div>
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                Buka email Anda dan klik tautan <strong>Confirm your mail / Verifikasi Akun</strong>. Jika sudah klik tautannya:
+                Buka email Anda dan klik tautan <strong>Confirm your mail</strong>. Jika sudah klik tautannya:
               </p>
               <button
                 type="button"
@@ -427,9 +450,6 @@ function LoginForm() {
                   </>
                 )}
               </button>
-              <p className="font-code-sm text-[11px] text-on-surface-variant">
-                Bypass jeda pengiriman email dan konfirmasi akun secara langsung
-              </p>
             </div>
 
             {/* Link Kirim Ulang & Ganti Email */}
@@ -460,29 +480,100 @@ function LoginForm() {
           /* ======================================================== */
           /* VIEW 2: LOGIN / REGISTER FORM                            */
           /* ======================================================== */
-          <div className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm space-y-space-lg">
-            <form onSubmit={handleSubmit} className="space-y-space-lg">
+          <div className="rounded-2xl bg-surface-container-lowest p-space-lg shadow-sm border border-outline-variant/30 space-y-space-md">
+            <form onSubmit={handleSubmit} className="space-y-space-md">
               {authMode === 'register' && (
-                /* Full Name Only (Bisa untuk semua pelajar, tanpa NIM/Prodi) */
-                <div className="space-y-space-xs">
-                  <label className="font-label-lg text-label-lg text-on-surface" htmlFor="student-name">
-                    Nama Lengkap
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-space-md text-on-surface-variant material-symbols-outlined text-[20px] pointer-events-none">
-                      person
-                    </span>
-                    <input
-                      id="student-name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Masukkan nama lengkap Anda"
-                      type="text"
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
-                    />
+                <>
+                  {/* 1. Full Name */}
+                  <div className="space-y-space-xs">
+                    <label className="font-label-lg text-label-lg text-on-surface" htmlFor="student-name">
+                      Nama Lengkap
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-space-md text-on-surface-variant material-symbols-outlined text-[20px] pointer-events-none">
+                        person
+                      </span>
+                      <input
+                        id="student-name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Masukkan nama lengkap Anda"
+                        type="text"
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                      />
+                    </div>
                   </div>
-                </div>
+
+                  {/* 2. Tanggal Lahir */}
+                  <div className="space-y-space-xs">
+                    <label className="font-label-lg text-label-lg text-on-surface" htmlFor="student-birthdate">
+                      Tanggal Lahir
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-space-md text-on-surface-variant material-symbols-outlined text-[20px] pointer-events-none">
+                        calendar_today
+                      </span>
+                      <input
+                        id="student-birthdate"
+                        value={birthDate}
+                        onChange={(e) => setBirthDate(e.target.value)}
+                        type="date"
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3. Jenjang Pendidikan */}
+                  <div className="space-y-space-xs">
+                    <label className="font-label-lg text-label-lg text-on-surface" htmlFor="student-level">
+                      Jenjang Pendidikan
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-space-md text-on-surface-variant material-symbols-outlined text-[20px] pointer-events-none">
+                        school
+                      </span>
+                      <select
+                        id="student-level"
+                        value={educationLevel}
+                        onChange={(e) => setEducationLevel(e.target.value)}
+                        required
+                        className="w-full pl-11 pr-10 py-3 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all appearance-none cursor-pointer"
+                      >
+                        {EDUCATION_LEVEL_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="absolute right-space-md text-on-surface-variant material-symbols-outlined text-[20px] pointer-events-none">
+                        expand_more
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 4. Asal Sekolah / Lembaga */}
+                  <div className="space-y-space-xs">
+                    <label className="font-label-lg text-label-lg text-on-surface" htmlFor="student-institution">
+                      Asal Sekolah / Kampus / Lembaga
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-space-md text-on-surface-variant material-symbols-outlined text-[20px] pointer-events-none">
+                        domain
+                      </span>
+                      <input
+                        id="student-institution"
+                        value={institution}
+                        onChange={(e) => setInstitution(e.target.value)}
+                        placeholder="Contoh: SMA Negeri 1 Jakarta / Univ. Indonesia"
+                        type="text"
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Email Field */}
@@ -492,7 +583,7 @@ function LoginForm() {
                     className="font-label-lg text-label-lg text-on-surface"
                     htmlFor="student-email"
                   >
-                    Email Siswa / Institusi / Pribadi
+                    Email Pelajar / Siswa
                   </label>
                   <span className={emailBadgeClass}>{emailBadgeText}</span>
                 </div>
@@ -504,10 +595,10 @@ function LoginForm() {
                     id="student-email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nama@email.com atau @kampus.ac.id"
+                    placeholder="nama@email.com atau @sekolah.sch.id"
                     type="email"
                     required
-                    className="w-full pl-11 pr-10 py-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                    className="w-full pl-11 pr-10 py-3 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
                   />
                   <span
                     className={`absolute right-space-md material-symbols-outlined text-[20px] transition-opacity duration-200 ${
@@ -545,7 +636,7 @@ function LoginForm() {
                     placeholder="••••••••••••"
                     type={showPassword ? 'text' : 'password'}
                     required
-                    className="w-full pl-11 pr-11 py-3 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                    className="w-full pl-11 pr-11 py-3 rounded-xl bg-surface-container-low text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
                   />
                   <button
                     type="button"
@@ -576,7 +667,7 @@ function LoginForm() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-5 h-5 rounded-DEFAULT bg-surface-container-high peer-checked:bg-primary flex items-center justify-center text-on-primary transition-colors">
+                    <div className="w-5 h-5 rounded bg-surface-container-high peer-checked:bg-primary flex items-center justify-center text-on-primary transition-colors">
                       <span
                         className={`material-symbols-outlined text-[16px] font-bold transition-transform ${
                           rememberMe ? 'scale-100' : 'scale-0'
@@ -611,14 +702,14 @@ function LoginForm() {
                       progress_activity
                     </span>
                     <span>
-                      {authMode === 'register' ? 'Mendaftarkan Akun...' : 'Memverifikasi Akun...'}
+                      {authMode === 'register' ? 'Mendaftarkan Akun Pelajar...' : 'Memverifikasi Akun...'}
                     </span>
                   </>
                 ) : (
                   <>
                     <span>
                       {authMode === 'register'
-                        ? 'Daftar & Terima Tautan Verifikasi'
+                        ? 'Daftar Akun Belajar'
                         : 'Masuk ke Akun Belajar'}
                     </span>
                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -707,7 +798,7 @@ function LoginForm() {
               <div className="flex items-center gap-2 text-primary">
                 <span className="material-symbols-outlined text-[24px]">info</span>
                 <h3 className="font-headline-sm text-headline-sm font-semibold text-on-surface">
-                  Aktifkan Google Provider
+                  Aktivasi Google Provider
                 </h3>
               </div>
               <button
@@ -719,11 +810,11 @@ function LoginForm() {
             </div>
 
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Supabase membutuhkan <strong>Google OAuth Client ID &amp; Secret</strong> dari Google Cloud Console agar tombol ini dapat membuka halaman pemilihan akun Google (<em>accounts.google.com</em>).
+              Untuk membuka layar login Google asli (<em>accounts.google.com</em>), aktifkan Google Provider di Supabase Dashboard dengan Client ID &amp; Secret dari Google Cloud.
             </p>
 
             <div className="rounded-xl bg-surface-container p-space-sm space-y-1.5 font-code-sm text-[12px]">
-              <div className="text-on-surface-variant font-semibold">Callback URI untuk Google Console:</div>
+              <div className="text-on-surface-variant font-semibold">Authorized Redirect URI Google:</div>
               <div className="bg-surface-container-lowest px-2 py-1.5 rounded border border-outline/20 select-all break-all text-primary font-bold">
                 {googleCallbackUrl}
               </div>
@@ -749,12 +840,12 @@ function LoginForm() {
                 {isDemoLoading ? (
                   <>
                     <span className="animate-spin material-symbols-outlined text-[18px]">progress_activity</span>
-                    <span>Menyiapkan Demo...</span>
+                    <span>Menyiapkan Akun...</span>
                   </>
                 ) : (
                   <>
                     <span className="material-symbols-outlined text-[18px]">school</span>
-                    <span>Gunakan Akun Uji Coba (Demo Siswa)</span>
+                    <span>Coba Masuk &amp; Lengkapi Profil Siswa</span>
                   </>
                 )}
               </button>

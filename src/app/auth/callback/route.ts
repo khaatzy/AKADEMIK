@@ -15,6 +15,16 @@ export async function GET(request: Request) {
 
   const supabase = await createClient()
 
+  // Helper function to determine post-auth destination
+  const getDestination = async (): Promise<string> => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const meta = user?.user_metadata || {}
+    const isProfileComplete = Boolean(meta.profile_completed || (meta.birth_date && meta.education_level))
+    return isProfileComplete ? next : '/lengkapi-profil'
+  }
+
   // 1. Email confirmation link via token_hash
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({
@@ -22,24 +32,27 @@ export async function GET(request: Request) {
       token_hash,
     })
     if (!error) {
-      return NextResponse.redirect(`${redirectBase}${next}?verified=true`)
+      const dest = await getDestination()
+      return NextResponse.redirect(`${redirectBase}${dest}`)
     }
   }
 
-  // 2. OAuth or PKCE auth code
+  // 2. OAuth (Google) or PKCE auth code
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${redirectBase}${next}`)
+      const dest = await getDestination()
+      return NextResponse.redirect(`${redirectBase}${dest}`)
     }
   }
 
-  // 3. Check if user already has a valid session
+  // 3. Check if user already has an active session
   const {
     data: { session },
   } = await supabase.auth.getSession()
   if (session) {
-    return NextResponse.redirect(`${redirectBase}${next}`)
+    const dest = await getDestination()
+    return NextResponse.redirect(`${redirectBase}${dest}`)
   }
 
   return NextResponse.redirect(`${redirectBase}/login?error=verification_failed`)

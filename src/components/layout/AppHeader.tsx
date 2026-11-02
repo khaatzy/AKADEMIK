@@ -1,18 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { logoutAction } from '@/lib/actions/auth';
+import { logoutAction, getUserProfile, UserProfileData } from '@/lib/actions/auth';
 
 export function AppHeader() {
   const pathname = usePathname();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [profile, setProfile] = useState<UserProfileData | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await getUserProfile();
+        if (data) {
+          setProfile(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load profile in header:', err);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   const getSectionTitle = () => {
     if (pathname.startsWith('/jadwal')) return 'Jadwal Dan Tugas';
     if (pathname.startsWith('/materi')) return 'Materi Dan Vault';
     if (pathname.startsWith('/tutor-ai')) return 'Tutor Ai';
+    if (pathname.startsWith('/lengkapi-profil')) return 'Profil Pelajar';
     return 'Beranda';
   };
 
@@ -20,10 +37,14 @@ export function AppHeader() {
     await logoutAction();
   };
 
+  const userInitial = profile?.fullName
+    ? profile.fullName.trim().charAt(0).toUpperCase()
+    : 'S';
+
   return (
     <header className="fixed top-0 inset-x-0 z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
       <div className="max-w-2xl mx-auto h-16 px-margin flex items-center justify-between">
-        <div className="flex items-center gap-space-sm min-w-0">
+        <Link href="/beranda" className="flex items-center gap-space-sm min-w-0 hover:opacity-90 transition-opacity">
           <div className="h-8 w-8 relative flex-shrink-0">
             <Image
               alt="Studika Logo"
@@ -42,7 +63,7 @@ export function AppHeader() {
               {getSectionTitle()}
             </span>
           </div>
-        </div>
+        </Link>
 
         <div className="relative flex items-center gap-space-sm flex-shrink-0">
           <button
@@ -62,7 +83,7 @@ export function AppHeader() {
             type="button"
           >
             <div className="w-8 h-8 rounded-full overflow-hidden relative border border-outline-variant/40 bg-secondary-fixed flex items-center justify-center text-secondary font-bold text-sm select-none">
-              <span>S</span>
+              <span>{userInitial}</span>
             </div>
           </button>
 
@@ -71,28 +92,32 @@ export function AppHeader() {
             <div className="absolute top-12 right-0 w-64 bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/30 p-space-md z-50 animate-in fade-in zoom-in-95 duration-150">
               <div className="pb-3 border-b border-surface-container-high">
                 <p className="font-label-lg text-label-lg text-on-surface font-semibold truncate">
-                  Samiaji Rahadian
+                  {profile?.fullName || 'Pelajar Studika'}
                 </p>
                 <p className="font-body-sm text-body-sm text-on-surface-variant truncate">
-                  220411100042 • Sem. 4
+                  {profile?.institution || 'Portal Belajar Siswa'}
                 </p>
                 <span className="inline-block mt-1 font-label-sm text-label-sm text-secondary bg-secondary-fixed/50 px-2 py-0.5 rounded-full font-medium">
-                  Teknik Informatika
+                  {profile?.educationLevel || 'Pelajar Aktif'}
                 </span>
               </div>
 
               <div className="py-2 space-y-1">
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-on-surface font-body-sm text-body-sm">
+                <Link
+                  href="/lengkapi-profil"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-on-surface hover:bg-surface-container font-body-sm text-body-sm transition-colors"
+                >
                   <span className="material-symbols-outlined text-[18px] text-primary">
+                    manage_accounts
+                  </span>
+                  <span>Ubah Data Profil</span>
+                </Link>
+                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-on-surface font-body-sm text-body-sm">
+                  <span className="material-symbols-outlined text-[18px] text-secondary">
                     verified_user
                   </span>
                   <span>Sesi Terautentikasi</span>
-                </div>
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-on-surface font-body-sm text-body-sm">
-                  <span className="material-symbols-outlined text-[18px] text-secondary">
-                    lock
-                  </span>
-                  <span>Proteksi RLS Aktif</span>
                 </div>
               </div>
 

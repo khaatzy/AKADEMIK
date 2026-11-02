@@ -10,6 +10,16 @@ export const registerSchema = z.object({
   email: z.string().email('Format email tidak valid'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
   fullName: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
+  birthDate: z.string().min(4, 'Tanggal lahir wajib diisi'),
+  educationLevel: z.string().min(1, 'Jenjang pendidikan wajib dipilih'),
+  institution: z.string().min(2, 'Nama sekolah/kampus/institusi minimal 2 karakter'),
+})
+
+export const completeProfileSchema = z.object({
+  fullName: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
+  birthDate: z.string().min(4, 'Tanggal lahir wajib diisi'),
+  educationLevel: z.string().min(1, 'Jenjang pendidikan wajib dipilih'),
+  institution: z.string().min(2, 'Nama sekolah/kampus/institusi minimal 2 karakter'),
 })
 
 // 2. Task Schemas

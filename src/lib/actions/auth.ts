@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient, createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
-import { loginSchema, registerSchema } from '@/lib/validations'
+import { loginSchema, registerSchema, completeProfileSchema } from '@/lib/validations'
 
 export interface AuthActionResult {
   success?: boolean
@@ -12,8 +12,20 @@ export interface AuthActionResult {
   needsVerification?: boolean
   email?: string
   url?: string
+  redirectUrl?: string
   googleNotConfigured?: boolean
   callbackUrl?: string
+}
+
+export interface UserProfileData {
+  id: string
+  email: string
+  fullName: string
+  birthDate: string | null
+  educationLevel: string
+  institution: string
+  avatarPath: string | null
+  isProfileCompleted: boolean
 }
 
 export async function loginAction(formData: FormData): Promise<AuthActionResult> {
@@ -61,7 +73,18 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
     }
   }
 
+  // Check if profile is completed
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const meta = user?.user_metadata || {}
+  const isProfileComplete = Boolean(meta.profile_completed || (meta.birth_date && meta.education_level))
+
   revalidatePath('/', 'layout')
+  if (!isProfileComplete) {
+    redirect('/lengkapi-profil')
+  }
+
   redirect('/beranda')
 }
 
@@ -69,16 +92,22 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
   const rawEmail = formData.get('email')
   const rawPassword = formData.get('password')
   const rawFullName = formData.get('fullName') || formData.get('full_name')
+  const rawBirthDate = formData.get('birthDate') || formData.get('birth_date')
+  const rawEducationLevel = formData.get('educationLevel') || formData.get('education_level')
+  const rawInstitution = formData.get('institution')
 
   const parsed = registerSchema.safeParse({
     email: rawEmail,
     password: rawPassword,
     fullName: rawFullName,
+    birthDate: rawBirthDate,
+    educationLevel: rawEducationLevel,
+    institution: rawInstitution,
   })
 
   if (!parsed.success) {
     return {
-      error: 'Data registrasi tidak valid.',
+      error: 'Data registrasi tidak lengkap atau tidak valid.',
       fieldErrors: parsed.error.flatten().fieldErrors,
     }
   }
@@ -97,7 +126,11 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
       emailRedirectTo: `${siteUrl}/auth/callback`,
       data: {
         full_name: parsed.data.fullName,
+        birth_date: parsed.data.birthDate,
+        education_level: parsed.data.educationLevel,
+        institution: parsed.data.institution,
         role: 'Pelajar Aktif',
+        profile_completed: true,
       },
     },
   })
@@ -116,6 +149,81 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
     needsVerification: true,
     email: parsed.data.email,
   }
+}
+
+export async function completeProfileAction(formData: FormData): Promise<AuthActionResult> {
+  const rawFullName = formData.get('fullName') || formData.get('full_name')
+  const rawBirthDate = formData.get('birthDate') || formData.get('birth_date')
+  const rawEducationLevel = formData.get('educationLevel') || formData.get('education_level')
+  const rawInstitution = formData.get('institution')
+
+  const parsed = completeProfileSchema.safeParse({
+    fullName: rawFullName,
+    birthDate: rawBirthDate,
+    educationLevel: rawEducationLevel,
+    institution: rawInstitution,
+  })
+
+  if (!parsed.success) {
+    return {
+      error: 'Harap lengkapi semua data profil Anda.',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    }
+  }
+
+  if (!isSupabaseConfigured()) {
+    revalidatePath('/', 'layout')
+    redirect('/beranda')
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return { error: 'Sesi login tidak ditemukan atau telah berakhir. Silakan masuk kembali.' }
+  }
+
+  // 1. Update user metadata
+  const { error: updateAuthErr } = await supabase.auth.updateUser({
+    data: {
+      full_name: parsed.data.fullName,
+      birth_date: parsed.data.birthDate,
+      education_level: parsed.data.educationLevel,
+      institution: parsed.data.institution,
+      profile_completed: true,
+    },
+  })
+
+  if (updateAuthErr) {
+    return { error: updateAuthErr.message }
+  }
+
+  // 2. Update profiles table in Supabase
+  try {
+    const { error: profileErr } = await supabase.from('profiles').upsert({
+      id: user.id,
+      full_name: parsed.data.fullName,
+      birth_date: parsed.data.birthDate,
+      education_level: parsed.data.educationLevel,
+      institution: parsed.data.institution,
+    })
+
+    if (profileErr) {
+      // Fallback if specific columns are not yet migrated in table
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        full_name: parsed.data.fullName,
+      })
+    }
+  } catch (err) {
+    console.warn('Profile table sync note:', err)
+  }
+
+  revalidatePath('/', 'layout')
+  redirect('/beranda')
 }
 
 export async function verifyEmailOtpAction(email: string, token: string): Promise<AuthActionResult> {
@@ -343,7 +451,7 @@ export async function signInWithGoogleAction(): Promise<AuthActionResult> {
 
 export async function signInWithDemoStudentAction(): Promise<AuthActionResult> {
   if (!isSupabaseConfigured()) {
-    return { success: true }
+    return { success: true, redirectUrl: '/lengkapi-profil' }
   }
 
   const supabase = await createClient()
@@ -363,6 +471,7 @@ export async function signInWithDemoStudentAction(): Promise<AuthActionResult> {
           user_metadata: {
             full_name: 'Pelajar Google Education',
             role: 'Pelajar Aktif',
+            // Leave profile_completed false so user can experience /lengkapi-profil
           },
         })
       } else if (!existingUser.email_confirmed_at) {
@@ -385,7 +494,44 @@ export async function signInWithDemoStudentAction(): Promise<AuthActionResult> {
   }
 
   revalidatePath('/', 'layout')
-  return { success: true }
+  return { success: true, redirectUrl: '/lengkapi-profil' }
+}
+
+export async function getUserProfile(): Promise<UserProfileData | null> {
+  if (!isSupabaseConfigured()) {
+    return null
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return null
+
+  // Fetch from profiles table
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  const meta = user.user_metadata || {}
+  const fullName = profile?.full_name || meta.full_name || user.email?.split('@')[0] || 'Pelajar Studika'
+  const birthDate = profile?.birth_date || meta.birth_date || null
+  const educationLevel = profile?.education_level || meta.education_level || 'Pelajar Aktif'
+  const institution = profile?.institution || meta.institution || 'Portal Belajar Studika'
+  const isProfileCompleted = Boolean(meta.profile_completed || (birthDate && educationLevel))
+
+  return {
+    id: user.id,
+    email: user.email || '',
+    fullName,
+    birthDate,
+    educationLevel,
+    institution,
+    avatarPath: profile?.avatar_path || meta.avatar_url || null,
+    isProfileCompleted,
+  }
 }
 
 export async function logoutAction() {

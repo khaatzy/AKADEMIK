@@ -14,6 +14,9 @@ export interface Database {
           id: string
           full_name: string
           avatar_path: string | null
+          birth_date?: string | null
+          institution?: string | null
+          education_level?: string | null
           nim: string | null
           program_studi: string | null
           semester: number
@@ -24,6 +27,9 @@ export interface Database {
           id: string
           full_name?: string
           avatar_path?: string | null
+          birth_date?: string | null
+          institution?: string | null
+          education_level?: string | null
           nim?: string | null
           program_studi?: string | null
           semester?: number
@@ -34,6 +40,9 @@ export interface Database {
           id?: string
           full_name?: string
           avatar_path?: string | null
+          birth_date?: string | null
+          institution?: string | null
+          education_level?: string | null
           nim?: string | null
           program_studi?: string | null
           semester?: number
