@@ -2,8 +2,29 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient, createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { loginSchema, registerSchema, completeProfileSchema } from '@/lib/validations'
+
+export async function getSiteUrl(): Promise<string> {
+  if (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
+  }
+  try {
+    const headerList = await headers()
+    const host = headerList.get('x-forwarded-host') || headerList.get('host')
+    const proto = headerList.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https')
+    if (host) {
+      return `${proto}://${host}`
+    }
+  } catch {
+    // fallback
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  return 'https://studika-xi.vercel.app'
+}
 
 export interface AuthActionResult {
   success?: boolean
@@ -117,7 +138,7 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
   }
 
   const supabase = await createClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const siteUrl = await getSiteUrl()
 
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -295,7 +316,7 @@ export async function checkEmailVerifiedAction(email: string): Promise<AuthActio
     }
 
     // Email is confirmed! Generate a sign-in link to establish session
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const siteUrl = await getSiteUrl()
     const linkRes = await admin.auth.admin.generateLink({
       type: 'magiclink',
       email: user.email!,
@@ -345,7 +366,7 @@ export async function instantVerifyEmailAction(email: string): Promise<AuthActio
     })
 
     // Generate login action link
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const siteUrl = await getSiteUrl()
     const linkRes = await admin.auth.admin.generateLink({
       type: 'magiclink',
       email: user.email!,
@@ -375,7 +396,7 @@ export async function resendVerificationOtpAction(email: string): Promise<AuthAc
   }
 
   const supabase = await createClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const siteUrl = await getSiteUrl()
   const { error } = await supabase.auth.resend({
     type: 'signup',
     email,
@@ -403,7 +424,7 @@ export async function signInWithGoogleAction(): Promise<AuthActionResult> {
   }
 
   const supabase = await createClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const siteUrl = await getSiteUrl()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
