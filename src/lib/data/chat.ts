@@ -14,7 +14,7 @@ export async function getChatMessages(): Promise<ChatMessage[]> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return [...inMemoryMessages];
+      return [];
     }
 
     const { data, error } = await supabase
@@ -23,8 +23,13 @@ export async function getChatMessages(): Promise<ChatMessage[]> {
       .order('created_at', { ascending: true })
       .limit(50);
 
-    if (error || !data || data.length === 0) {
-      return [...inMemoryMessages];
+    if (error) {
+      console.warn('Gagal mengambil pesan obrolan dari Supabase:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((msg) => {
@@ -43,7 +48,7 @@ export async function getChatMessages(): Promise<ChatMessage[]> {
           msg.role === 'assistant'
             ? {
                 title: 'POIN PENTING & FORMULA',
-                description: 'Verifikasi kembali relasi turunan parsial dan determinan matriks sebelum evaluasi.',
+                description: 'Verifikasi kembali relasi konsep sebelum evaluasi.',
                 badge: 'Tips Ringkas',
               }
             : undefined,
@@ -51,7 +56,7 @@ export async function getChatMessages(): Promise<ChatMessage[]> {
     });
   } catch (err) {
     console.error('Gagal mengambil pesan obrolan:', err);
-    return [...inMemoryMessages];
+    return [];
   }
 }
 

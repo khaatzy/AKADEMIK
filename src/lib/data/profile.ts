@@ -12,42 +12,61 @@ export async function getProfile(): Promise<Profile> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return mockProfile;
-    }
-
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (error || !profile) {
       return {
-        id: user.id,
-        name: user.user_metadata?.full_name || user.email?.split('@')[0] || mockProfile.name,
-        email: user.email || mockProfile.email,
-        avatarUrl: mockProfile.avatarUrl,
-        role: 'Mahasiswa Aktif',
-        institution: 'Universitas Indonesia',
-        nim: user.user_metadata?.nim || mockProfile.nim,
-        programStudi: user.user_metadata?.program_studi || mockProfile.programStudi,
-        semester: user.user_metadata?.semester || mockProfile.semester,
+        id: 'guest',
+        name: 'Pelajar',
+        email: '',
+        avatarUrl: '',
+        role: 'Pelajar Aktif',
+        institution: 'Portal Belajar Siswa',
+        programStudi: 'Akademik',
+        semester: 1,
       };
     }
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const displayName =
+      profile?.full_name ||
+      user.user_metadata?.full_name ||
+      (user.email ? user.email.split('@')[0] : 'Pelajar');
+
+    const institution =
+      profile?.institution ||
+      user.user_metadata?.institution ||
+      'Portal Belajar Siswa';
+
+    const educationLevel =
+      profile?.education_level ||
+      user.user_metadata?.education_level ||
+      'Pelajar Aktif';
+
     return {
-      id: profile.id,
-      name: profile.full_name || mockProfile.name,
-      email: user.email || mockProfile.email,
-      avatarUrl: profile.avatar_path || mockProfile.avatarUrl,
-      role: 'Mahasiswa Aktif',
-      institution: 'Universitas Indonesia',
-      nim: profile.nim || mockProfile.nim,
-      programStudi: profile.program_studi || mockProfile.programStudi,
-      semester: profile.semester || mockProfile.semester,
+      id: user.id,
+      name: displayName,
+      email: user.email || '',
+      avatarUrl: profile?.avatar_path || '',
+      role: educationLevel,
+      institution: institution,
+      nim: profile?.birth_date || user.user_metadata?.birth_date || '',
+      programStudi: educationLevel,
+      semester: 1,
     };
   } catch (err) {
     console.error('Gagal mengambil data profil dari Supabase:', err);
-    return mockProfile;
+    return {
+      id: 'fallback',
+      name: 'Pelajar',
+      email: '',
+      avatarUrl: '',
+      role: 'Pelajar Aktif',
+      institution: 'Portal Belajar Siswa',
+      programStudi: 'Akademik',
+      semester: 1,
+    };
   }
 }

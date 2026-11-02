@@ -174,13 +174,26 @@ export default function AiTutorPage() {
 
       {/* Chat Thread */}
       <div className="flex flex-col px-margin py-space-md gap-space-lg">
-        <div className="flex items-center justify-center my-1">
-          <span className="px-3 py-1 rounded-full bg-surface-container font-code-sm text-code-sm text-on-surface-variant text-center">
-            Hari ini, 09:41 WIB • Catatan Terkait: Biologi_Sel_Mitosis.pdf
-          </span>
-        </div>
-
-        {messages.map((msg) => {
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shadow-sm mb-4">
+              <span className="material-symbols-outlined text-[36px]">neurology</span>
+            </div>
+            <h2 className="font-headline-md text-headline-md text-on-surface font-semibold">
+              Tanya Apa Saja ke Tutor AI
+            </h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-1.5 max-w-sm">
+              Mulai diskusimu sekarang. Kamu bisa menanyakan konsep materi, meminta rangkuman pelajaran, atau memilih inspirasi pertanyaan di atas.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-center my-1">
+              <span className="px-3 py-1 rounded-full bg-surface-container font-code-sm text-code-sm text-on-surface-variant text-center">
+                Sesi Tanya Jawab Tutor AI Aktif
+              </span>
+            </div>
+            {messages.map((msg) => {
           if (msg.role === 'user') {
             return (
               <div
@@ -362,6 +375,8 @@ export default function AiTutorPage() {
             </div>
           );
         })}
+        </>
+        )}
         <div ref={chatBottomRef} />
       </div>
 

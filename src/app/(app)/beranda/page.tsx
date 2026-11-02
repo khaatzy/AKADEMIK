@@ -51,8 +51,8 @@ export default function BerandaPage() {
 
   // Calculate dynamic progress based on tasks
   const completedCount = tasks.filter((t) => t.isDone).length;
-  const totalCount = tasks.length || 4;
-  const percentage = Math.round((completedCount / totalCount) * 100);
+  const totalCount = tasks.length;
+  const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
     <div className="flex flex-col w-full px-margin pb-space-2xl gap-space-xl">
@@ -71,8 +71,8 @@ export default function BerandaPage() {
         <div className="flex items-center justify-between">
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="font-headline-lg text-headline-lg text-on-surface font-semibold">
-                Halo, {profile?.name || 'Maya'}!
+              <span className="font-headline-lg text-headline-lg text-on-surface font-semibold truncate">
+                Halo, {profile?.name || 'Pelajar'}!
               </span>
               <span className="text-2xl animate-bounce">☀️</span>
             </div>
@@ -99,11 +99,13 @@ export default function BerandaPage() {
               </span>
             </div>
             <span className="font-code-sm text-code-sm text-primary font-medium">
-              {completedCount}/{totalCount} Selesai ({percentage}%)
+              {totalCount > 0 ? `${completedCount}/${totalCount} Selesai (${percentage}%)` : 'Belum Ada Tugas Aktif'}
             </span>
           </div>
           <p className="font-body-sm text-body-sm text-on-surface-variant z-10">
-            {completedCount === totalCount
+            {totalCount === 0
+              ? 'Belum ada target tugas hari ini. Mulai dengan membuat tugas pertamamu!'
+              : completedCount === totalCount
               ? 'Luar biasa! Semua target belajarmu hari ini tercapai!'
               : `${totalCount - completedCount} langkah lagi menuju target belajarmu hari ini!`}
           </p>
@@ -165,24 +167,24 @@ export default function BerandaPage() {
         </div>
       </section>
 
-      {/* AI Recommendation Banner (Summarized PDF) */}
+      {/* AI Recommendation Banner */}
       <section className="flex flex-col">
-        <div className="relative overflow-hidden rounded-xl bg-surface-container-high p-space-lg flex flex-col gap-space-sm shadow-sm">
+        <div className="relative overflow-hidden rounded-xl bg-surface-container-high p-space-lg flex flex-col gap-space-sm shadow-sm border border-outline-variant/20">
           <div className="flex items-center justify-between">
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-container font-label-sm text-label-sm font-semibold">
               <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-              Sintesis AI Terbaru
+              Sintesis AI Pintar
             </span>
             <span className="font-code-sm text-code-sm text-on-surface-variant">
-              Kemarin, 21:40
+              Tutor AI Siap
             </span>
           </div>
           <div className="flex flex-col gap-1">
             <h3 className="font-headline-sm text-headline-sm text-on-surface font-semibold">
-              Rangkuman: Bab 4 Termodinamika.pdf
+              Mulai Petualangan Belajarmu
             </h3>
             <p className="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
-              AI telah mengekstrak 12 konsep esensial, 5 formula kunci siklus Carnot, dan menyusun 8 kartu latihan kilat untukmu.
+              Unggah modul PDF atau foto catatan pertamamu ke Vault. Tutor AI akan mengekstrak konsep esensial, rumus, dan kartu flashcard secara otomatis.
             </p>
           </div>
           <div className="flex items-center gap-2 pt-1">
@@ -190,17 +192,16 @@ export default function BerandaPage() {
               href="/materi"
               className="flex-1 py-2 px-3 rounded-lg bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-transform hover:bg-primary-container"
             >
-              <span className="material-symbols-outlined text-[18px]">menu_book</span>
-              Baca Ringkasan (4 Mnt)
+              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+              Unggah Catatan Pertama
             </Link>
-            <button
-              type="button"
-              onClick={() => showToast('8 Kartu latihan Termodinamika disimpan ke koleksi!')}
-              aria-label="Simpan kartu flashcard"
+            <Link
+              href="/tutor-ai"
               className="p-2 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center shadow-sm"
+              title="Diskusi dengan Tutor AI"
             >
-              <span className="material-symbols-outlined text-[20px]">style</span>
-            </button>
+              <span className="material-symbols-outlined text-[20px]">neurology</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -216,60 +217,83 @@ export default function BerandaPage() {
               Pengingat Ujian Mendatang
             </h2>
           </div>
-          <Link
-            href="/jadwal"
-            className="font-label-md text-label-md text-primary hover:underline font-semibold"
-          >
-            Semua (4)
-          </Link>
+          {exams.length > 0 && (
+            <Link
+              href="/jadwal"
+              className="font-label-md text-label-md text-primary hover:underline font-semibold"
+            >
+              Semua ({exams.length})
+            </Link>
+          )}
         </div>
         <div className="flex flex-col gap-2.5">
-          {exams.map((exam) => (
-            <div
-              key={exam.id}
-              className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between gap-space-sm"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 ${
-                    exam.daysLeftLabel === 'H-2'
-                      ? 'bg-primary-container text-on-primary'
-                      : 'bg-surface-container-high text-on-surface-variant'
-                  }`}
-                >
-                  <span className="font-label-sm text-label-sm uppercase tracking-wide leading-none">
-                    Hari
-                  </span>
-                  <span className="font-headline-md text-headline-md font-bold leading-tight">
-                    {exam.daysLeftLabel}
-                  </span>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-headline-sm text-headline-sm text-on-surface truncate font-semibold">
-                      {exam.title}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold">
-                      {exam.priorityLabel}
-                    </span>
-                    <span className="font-code-sm text-code-sm text-on-surface-variant truncate">
-                      {exam.dateLabel}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => router.push('/jadwal')}
-                aria-label={`Review materi ${exam.title}`}
-                className="w-9 h-9 rounded-full bg-surface-container text-primary flex items-center justify-center flex-shrink-0 hover:bg-primary-fixed transition-colors"
+          {exams.length === 0 ? (
+            <div className="p-space-lg rounded-xl bg-surface-container-lowest text-center shadow-sm border border-dashed border-outline-variant/60 flex flex-col items-center">
+              <span className="material-symbols-outlined text-outline text-[32px] mb-1">
+                event_available
+              </span>
+              <p className="font-label-lg text-label-lg text-on-surface font-semibold">
+                Belum Ada Jadwal Ujian
+              </p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5 max-w-xs">
+                Jadwal ulangan atau evaluasi yang kamu atur akan dihitung mundur secara otomatis di sini.
+              </p>
+              <Link
+                href="/jadwal"
+                className="mt-3 inline-flex items-center gap-1 text-primary font-label-md text-label-md hover:underline font-semibold"
               >
-                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-              </button>
+                <span className="material-symbols-outlined text-[16px]">add</span>
+                Tambah Jadwal Baru
+              </Link>
             </div>
-          ))}
+          ) : (
+            exams.map((exam) => (
+              <div
+                key={exam.id}
+                className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between gap-space-sm"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl flex-shrink-0 ${
+                      exam.daysLeftLabel === 'H-2'
+                        ? 'bg-primary-container text-on-primary'
+                        : 'bg-surface-container-high text-on-surface-variant'
+                    }`}
+                  >
+                    <span className="font-label-sm text-label-sm uppercase tracking-wide leading-none">
+                      Hari
+                    </span>
+                    <span className="font-headline-md text-headline-md font-bold leading-tight">
+                      {exam.daysLeftLabel}
+                    </span>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-headline-sm text-headline-sm text-on-surface truncate font-semibold">
+                        {exam.title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold">
+                        {exam.priorityLabel}
+                      </span>
+                      <span className="font-code-sm text-code-sm text-on-surface-variant truncate">
+                        {exam.dateLabel}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/jadwal')}
+                  aria-label={`Review materi ${exam.title}`}
+                  className="w-9 h-9 rounded-full bg-surface-container text-primary flex items-center justify-center flex-shrink-0 hover:bg-primary-fixed transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </section>
 
@@ -284,101 +308,124 @@ export default function BerandaPage() {
               Jadwal Kelas Hari Ini
             </h2>
           </div>
-          <span className="font-code-sm text-code-sm text-on-surface-variant">
-            {schedules.length} Sesi
-          </span>
+          {schedules.length > 0 && (
+            <span className="font-code-sm text-code-sm text-on-surface-variant">
+              {schedules.length} Sesi
+            </span>
+          )}
         </div>
         <div className="flex flex-col gap-3">
-          {schedules.map((sch) => {
-            const isCompleted = sch.status === 'completed';
-            const isInProgress = sch.status === 'in_progress';
-
-            return (
-              <div
-                key={sch.id}
-                className={`flex items-start gap-3 p-space-md rounded-xl shadow-sm transition-all ${
-                  isCompleted
-                    ? 'bg-surface-container-lowest opacity-80'
-                    : isInProgress
-                    ? 'bg-surface-container-low shadow-md relative overflow-hidden'
-                    : 'bg-surface-container-lowest'
-                }`}
+          {schedules.length === 0 ? (
+            <div className="p-space-lg rounded-xl bg-surface-container-lowest text-center shadow-sm border border-dashed border-outline-variant/60 flex flex-col items-center">
+              <span className="material-symbols-outlined text-outline text-[32px] mb-1">
+                bedtime
+              </span>
+              <p className="font-label-lg text-label-lg text-on-surface font-semibold">
+                Tidak Ada Sesi Kelas Hari Ini
+              </p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5 max-w-xs">
+                Jadwal belajar harianmu kosong. Waktu yang tenang untuk fokus belajar mandiri atau membaca catatan.
+              </p>
+              <Link
+                href="/jadwal"
+                className="mt-3 inline-flex items-center gap-1 text-primary font-label-md text-label-md hover:underline font-semibold"
               >
-                <div className="flex flex-col items-center pt-0.5 flex-shrink-0 w-14">
-                  <span
-                    className={`font-code-sm text-code-sm font-medium ${
-                      isInProgress ? 'text-primary font-bold' : 'text-on-surface-variant'
-                    }`}
-                  >
-                    {sch.startTime}
-                  </span>
-                  <span className="font-label-sm text-label-sm text-on-surface-variant/70">
-                    {sch.endTime}
-                  </span>
-                </div>
+                <span className="material-symbols-outlined text-[16px]">edit_calendar</span>
+                Atur Jadwal Pelajaran
+              </Link>
+            </div>
+          ) : (
+            schedules.map((sch) => {
+              const isCompleted = sch.status === 'completed';
+              const isInProgress = sch.status === 'in_progress';
+
+              return (
                 <div
-                  className={`w-1.5 self-stretch rounded-full flex-shrink-0 ${
-                    isInProgress
-                      ? 'bg-primary'
-                      : isCompleted
-                      ? 'bg-surface-container-highest'
-                      : 'bg-secondary'
+                  key={sch.id}
+                  className={`flex items-start gap-3 p-space-md rounded-xl shadow-sm transition-all ${
+                    isCompleted
+                      ? 'bg-surface-container-lowest opacity-80'
+                      : isInProgress
+                      ? 'bg-surface-container-low shadow-md relative overflow-hidden'
+                      : 'bg-surface-container-lowest'
                   }`}
-                ></div>
-                <div className="flex flex-col flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="font-headline-sm text-headline-sm text-on-surface truncate font-semibold">
-                      {sch.courseName}
+                >
+                  <div className="flex flex-col items-center pt-0.5 flex-shrink-0 w-14">
+                    <span
+                      className={`font-code-sm text-code-sm font-medium ${
+                        isInProgress ? 'text-primary font-bold' : 'text-on-surface-variant'
+                      }`}
+                    >
+                      {sch.startTime}
                     </span>
-                    {isCompleted && (
-                      <span className="material-symbols-outlined text-[18px] text-primary">
-                        check_circle
-                      </span>
-                    )}
-                    {isInProgress && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-semibold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-on-primary animate-ping"></span>
-                        Berlangsung
-                      </span>
-                    )}
-                    {!isCompleted && !isInProgress && (
-                      <span className="font-code-sm text-code-sm text-secondary font-medium">
-                        Nanti Siang
-                      </span>
-                    )}
+                    <span className="font-label-sm text-label-sm text-on-surface-variant/70">
+                      {sch.endTime}
+                    </span>
                   </div>
-                  <span className="font-body-sm text-body-sm text-on-surface-variant">
-                    {sch.room} • {sch.lecturer}
-                  </span>
-                  <div className="mt-2">
-                    {isInProgress ? (
-                      <button
-                        type="button"
-                        onClick={() => router.push('/materi')}
-                        className="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md flex items-center gap-1 shadow-sm active:scale-95 transition-transform"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">
-                          open_in_new
+                  <div
+                    className={`w-1.5 self-stretch rounded-full flex-shrink-0 ${
+                      isInProgress
+                        ? 'bg-primary'
+                        : isCompleted
+                        ? 'bg-surface-container-highest'
+                        : 'bg-secondary'
+                    }`}
+                  ></div>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="font-headline-sm text-headline-sm text-on-surface truncate font-semibold">
+                        {sch.courseName}
+                      </span>
+                      {isCompleted && (
+                        <span className="material-symbols-outlined text-[18px] text-primary">
+                          check_circle
                         </span>
-                        {sch.actionText}
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => router.push('/materi')}
-                        className="inline-flex items-center gap-1 text-primary font-label-md text-label-md hover:underline"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">
-                          {isCompleted ? 'folder' : 'download'}
+                      )}
+                      {isInProgress && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-on-primary animate-ping"></span>
+                          Berlangsung
                         </span>
-                        {sch.actionText}
-                      </button>
-                    )}
+                      )}
+                      {!isCompleted && !isInProgress && (
+                        <span className="font-code-sm text-code-sm text-secondary font-medium">
+                          Nanti Siang
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">
+                      {sch.room} • {sch.lecturer}
+                    </span>
+                    <div className="mt-2">
+                      {isInProgress ? (
+                        <button
+                          type="button"
+                          onClick={() => router.push('/materi')}
+                          className="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md flex items-center gap-1 shadow-sm active:scale-95 transition-transform"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">
+                            open_in_new
+                          </span>
+                          {sch.actionText || 'Buka Sesi'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => router.push('/materi')}
+                          className="inline-flex items-center gap-1 text-primary font-label-md text-label-md hover:underline"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">
+                            {isCompleted ? 'folder' : 'download'}
+                          </span>
+                          {sch.actionText || 'Lihat Materi'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </section>
 
@@ -403,79 +450,100 @@ export default function BerandaPage() {
           </button>
         </div>
         <div className="flex flex-col gap-2.5">
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              className={`flex items-center justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm gap-space-sm transition-all ${
-                task.isDone ? 'opacity-60' : ''
-              }`}
-            >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <button
-                  type="button"
-                  aria-label={task.isDone ? 'Tandai belum selesai' : 'Tandai selesai'}
-                  onClick={() => handleToggleTask(task.id)}
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
-                    task.isDone
-                      ? 'bg-primary text-on-primary'
-                      : 'bg-surface-container text-primary hover:bg-surface-container-highest'
-                  }`}
-                >
-                  <span
-                    className={`material-symbols-outlined text-[18px] transition-opacity ${
-                      task.isDone ? 'opacity-100' : 'opacity-0'
+          {tasks.length === 0 ? (
+            <div className="p-space-lg rounded-xl bg-surface-container-lowest text-center shadow-sm border border-dashed border-outline-variant/60 flex flex-col items-center">
+              <span className="material-symbols-outlined text-outline text-[32px] mb-1">
+                assignment_turned_in
+              </span>
+              <p className="font-label-lg text-label-lg text-on-surface font-semibold">
+                Belum Ada Tugas Aktif
+              </p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5 max-w-xs">
+                Semua tugas beres atau belum ada tugas yang dicatat. Buat tugas baru untuk tetap teratur dan fokus.
+              </p>
+              <Link
+                href="/jadwal"
+                className="mt-3 inline-flex items-center gap-1 text-primary font-label-md text-label-md hover:underline font-semibold"
+              >
+                <span className="material-symbols-outlined text-[16px]">add_task</span>
+                Buat Tugas Pertama
+              </Link>
+            </div>
+          ) : (
+            tasks.map((task) => (
+              <div
+                key={task.id}
+                className={`flex items-center justify-between p-space-md rounded-xl bg-surface-container-lowest shadow-sm gap-space-sm transition-all ${
+                  task.isDone ? 'opacity-60' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <button
+                    type="button"
+                    aria-label={task.isDone ? 'Tandai belum selesai' : 'Tandai selesai'}
+                    onClick={() => handleToggleTask(task.id)}
+                    className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                      task.isDone
+                        ? 'bg-primary text-on-primary'
+                        : 'bg-surface-container text-primary hover:bg-surface-container-highest'
                     }`}
                   >
-                    check
-                  </span>
-                </button>
-                <div className="flex flex-col min-w-0">
-                  <span
-                    className={`font-body-md text-body-md text-on-surface font-medium truncate ${
-                      task.isDone ? 'line-through text-on-surface-variant' : ''
-                    }`}
-                  >
-                    {task.title}
-                  </span>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {task.isDone ? (
-                      <span className="font-code-sm text-code-sm text-on-surface-variant">
-                        Selesai {task.completedAt || 'Hari ini'}
-                      </span>
-                    ) : (
-                      <>
-                        <span
-                          className={`font-code-sm text-code-sm font-medium flex items-center gap-0.5 ${
-                            task.priority === 'urgent' ? 'text-error' : 'text-on-surface-variant'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[14px]">alarm</span>
-                          {task.dueTime}
+                    <span
+                      className={`material-symbols-outlined text-[18px] transition-opacity ${
+                        task.isDone ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    >
+                      check
+                    </span>
+                  </button>
+                  <div className="flex flex-col min-w-0">
+                    <span
+                      className={`font-body-md text-body-md text-on-surface font-medium truncate ${
+                        task.isDone ? 'line-through text-on-surface-variant' : ''
+                      }`}
+                    >
+                      {task.title}
+                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {task.isDone ? (
+                        <span className="font-code-sm text-code-sm text-on-surface-variant">
+                          Selesai {task.completedAt || 'Hari ini'}
                         </span>
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full font-label-sm text-label-sm ${
-                            task.priority === 'urgent'
-                              ? 'bg-error-container text-on-error-container'
-                              : 'bg-secondary-fixed text-on-secondary-fixed-variant'
-                          }`}
-                        >
-                          {task.priorityLabel}
-                        </span>
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <span
+                            className={`font-code-sm text-code-sm font-medium flex items-center gap-0.5 ${
+                              task.priority === 'urgent' ? 'text-error' : 'text-on-surface-variant'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">alarm</span>
+                            {task.dueTime}
+                          </span>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full font-label-sm text-label-sm ${
+                              task.priority === 'urgent'
+                                ? 'bg-error-container text-on-error-container'
+                                : 'bg-secondary-fixed text-on-secondary-fixed-variant'
+                            }`}
+                          >
+                            {task.priorityLabel}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  aria-label="Menu opsi tugas"
+                  onClick={() => showToast(`Pilihan untuk "${task.title}"`)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface"
+                >
+                  <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                </button>
               </div>
-              <button
-                type="button"
-                aria-label="Menu opsi tugas"
-                onClick={() => showToast(`Pilihan untuk "${task.title}"`)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-on-surface"
-              >
-                <span className="material-symbols-outlined text-[20px]">more_vert</span>
-              </button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 

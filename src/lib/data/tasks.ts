@@ -14,7 +14,7 @@ export async function getTasks(): Promise<TaskItem[]> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return [...inMemoryTasks];
+      return [];
     }
 
     const { data, error } = await supabase
@@ -22,8 +22,13 @@ export async function getTasks(): Promise<TaskItem[]> {
       .select('*, courses (name)')
       .order('due_at', { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return [...inMemoryTasks];
+    if (error) {
+      console.warn('Gagal mengambil daftar tugas dari Supabase:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((t) => {
@@ -65,7 +70,7 @@ export async function getTasks(): Promise<TaskItem[]> {
     });
   } catch (err) {
     console.error('Gagal mengambil daftar tugas:', err);
-    return [...inMemoryTasks];
+    return [];
   }
 }
 

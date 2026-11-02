@@ -33,7 +33,7 @@ export async function getFiles(filter?: string): Promise<FileItem[]> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return filterFileList(inMemoryFiles, filter);
+      return [];
     }
 
     const query = supabase
@@ -43,8 +43,13 @@ export async function getFiles(filter?: string): Promise<FileItem[]> {
 
     const { data, error } = await query;
 
-    if (error || !data || data.length === 0) {
-      return filterFileList(inMemoryFiles, filter);
+    if (error) {
+      console.warn('Gagal mengambil daftar berkas dari Supabase:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     const filesWithUrls: FileItem[] = await Promise.all(
@@ -94,7 +99,7 @@ export async function getFiles(filter?: string): Promise<FileItem[]> {
     return filterFileList(filesWithUrls, filter);
   } catch (err) {
     console.error('Gagal mengambil daftar berkas:', err);
-    return filterFileList(inMemoryFiles, filter);
+    return [];
   }
 }
 

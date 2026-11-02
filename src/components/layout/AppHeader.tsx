@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { StudikaLogo } from '@/components/ui/StudikaLogo';
 import { logoutAction, getUserProfile, UserProfileData } from '@/lib/actions/auth';
 
 export function AppHeader() {
@@ -46,14 +46,7 @@ export function AppHeader() {
       <div className="max-w-2xl mx-auto h-16 px-margin flex items-center justify-between">
         <Link href="/beranda" className="flex items-center gap-space-sm min-w-0 hover:opacity-90 transition-opacity">
           <div className="h-8 w-8 relative flex-shrink-0">
-            <Image
-              alt="Studika Logo"
-              src="/logo.svg"
-              width={32}
-              height={32}
-              className="w-8 h-8 object-contain rounded-xl"
-              priority
-            />
+            <StudikaLogo size={32} className="rounded-xl" />
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-primary font-headline-sm text-headline-sm truncate font-semibold leading-tight">

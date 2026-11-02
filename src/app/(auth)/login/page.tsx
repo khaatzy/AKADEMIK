@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
+import { StudikaLogo } from '@/components/ui/StudikaLogo';
 import {
   loginAction,
   registerAction,
@@ -291,14 +291,7 @@ function LoginForm() {
           <div className="relative z-10 flex flex-col space-y-space-xs">
             <div className="flex items-center space-x-space-xs">
               <div className="w-8 h-8 relative flex-shrink-0">
-                <Image
-                  alt="Studika Logo"
-                  src="/logo.svg"
-                  width={32}
-                  height={32}
-                  className="w-8 h-8 object-contain rounded-lg"
-                  priority
-                />
+                <StudikaLogo size={32} className="rounded-lg" />
               </div>
               <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">
                 Portal Pelajar &amp; Siswa

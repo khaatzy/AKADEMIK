@@ -12,7 +12,7 @@ export async function getExams(): Promise<ExamItem[]> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return [...mockExams];
+      return [];
     }
 
     const { data, error } = await supabase
@@ -20,8 +20,13 @@ export async function getExams(): Promise<ExamItem[]> {
       .select('*, courses (name)')
       .order('scheduled_at', { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return [...mockExams];
+    if (error) {
+      console.warn('Gagal mengambil data ujian dari Supabase:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((exam) => {
@@ -50,6 +55,6 @@ export async function getExams(): Promise<ExamItem[]> {
     });
   } catch (err) {
     console.error('Gagal mengambil data ujian:', err);
-    return [...mockExams];
+    return [];
   }
 }

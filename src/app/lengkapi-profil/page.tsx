@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { StudikaLogo } from '@/components/ui/StudikaLogo';
 import { completeProfileAction, getUserProfile } from '@/lib/actions/auth';
 
 const EDUCATION_LEVELS = [
@@ -103,14 +103,7 @@ export default function CompleteProfilePage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-space-xs">
                 <div className="w-8 h-8 relative flex-shrink-0">
-                  <Image
-                    alt="Studika Logo"
-                    src="/logo.svg"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 object-contain rounded-lg"
-                    priority
-                  />
+                  <StudikaLogo size={32} className="rounded-lg" />
                 </div>
                 <span className="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">
                   Studika Profil Pelajar

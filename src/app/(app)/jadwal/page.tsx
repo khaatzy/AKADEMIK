@@ -36,8 +36,8 @@ export default function ScheduleTasksPage() {
         getTasks(),
       ]);
       setSchedules(schData);
-      setExams(examData.length > 2 ? examData.slice(2, 4) : examData);
-      setTasks(taskData.length >= 3 ? taskData.slice(-3) : taskData);
+      setExams(examData);
+      setTasks(taskData);
     }
     loadData();
   }, []);

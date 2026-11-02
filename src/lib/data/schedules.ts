@@ -12,7 +12,7 @@ export async function getDashboardSchedules(): Promise<ScheduleItem[]> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return [...mockDashboardSchedules];
+      return [];
     }
 
     const { data, error } = await supabase
@@ -20,8 +20,13 @@ export async function getDashboardSchedules(): Promise<ScheduleItem[]> {
       .select('*, courses (name, code, lecturer, color)')
       .limit(4);
 
-    if (error || !data || data.length === 0) {
-      return [...mockDashboardSchedules];
+    if (error) {
+      console.warn('Gagal mengambil jadwal dashboard dari Supabase:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((s, index) => {
@@ -40,7 +45,7 @@ export async function getDashboardSchedules(): Promise<ScheduleItem[]> {
     });
   } catch (err) {
     console.error('Gagal mengambil jadwal dashboard:', err);
-    return [...mockDashboardSchedules];
+    return [];
   }
 }
 
@@ -54,7 +59,7 @@ export async function getMondaySchedule(): Promise<ScheduleItem[]> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return [...mockMondaySchedule];
+      return [];
     }
 
     const { data, error } = await supabase
@@ -63,8 +68,13 @@ export async function getMondaySchedule(): Promise<ScheduleItem[]> {
       .eq('day_of_week', 'Senin')
       .order('start_time', { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return [...mockMondaySchedule];
+    if (error) {
+      console.warn('Gagal mengambil jadwal hari Senin dari Supabase:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((s, index) => {
@@ -83,6 +93,6 @@ export async function getMondaySchedule(): Promise<ScheduleItem[]> {
     });
   } catch (err) {
     console.error('Gagal mengambil jadwal hari Senin:', err);
-    return [...mockMondaySchedule];
+    return [];
   }
 }

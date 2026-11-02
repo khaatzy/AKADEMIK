@@ -28,15 +28,7 @@ export default function MaterialsVaultPage() {
   const [activeFilter, setActiveFilter] = useState('Semua');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(100);
-  const [uploadedFile, setUploadedFile] = useState<FileItem | null>({
-    id: 'fil-4',
-    name: 'Slide_Fisika_Bab4.pdf',
-    courseName: 'Fisika',
-    size: '4.2 MB',
-    kind: 'pdf',
-    uploadedAt: 'Selesai diunggah • 100% Selesai',
-    pageCount: 18,
-  });
+  const [uploadedFile, setUploadedFile] = useState<FileItem | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; isError?: boolean } | null>(null);
 
   useEffect(() => {
